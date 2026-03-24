@@ -56,7 +56,7 @@ pub async fn extract_pages(input_path: String, ranges: String) -> Result<Extract
         return Err("No valid pages specified to extract".to_string());
     }
 
-    let mut doc_pages = doc.get_pages();
+    let doc_pages = doc.get_pages();
     let mut page_object_ids = Vec::new();
     
     for p in &pages_to_keep {
