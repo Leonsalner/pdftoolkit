@@ -28,43 +28,35 @@ export function DropZone({ onFileSelect, multiple = false }: DropZoneProps) {
   }, [openDialog, onFileSelect, multiple]);
 
   useEffect(() => {
-    let unlisten: any;
+    const webview = getCurrentWebview();
     
-    async function setupDragDrop() {
-      const webview = getCurrentWebview();
-      
-      unlisten = await webview.onDragDropEvent((event) => {
-        if (event.payload.type === 'enter') {
-          setIsHovered(true);
-        } else if (event.payload.type === 'leave') {
-          setIsHovered(false);
-        } else if (event.payload.type === 'drop') {
-          setIsHovered(false);
-          const paths = event.payload.paths;
-          
-          // Filter for PDF files only
-          const pdfPaths = paths.filter(p => p.toLowerCase().endsWith('.pdf'));
-          
-          if (pdfPaths.length > 0) {
-            if (multiple) {
-              const names = pdfPaths.map(p => p.split('/').pop() || p.split('\\').pop() || 'Selected File');
-              onFileSelect(pdfPaths, names);
-            } else {
-              const p = pdfPaths[0];
-              const name = p.split('/').pop() || p.split('\\').pop() || 'Selected File';
-              onFileSelect(p, name);
-            }
+    const unlistenPromise = webview.onDragDropEvent((event) => {
+      if (event.payload.type === 'enter') {
+        setIsHovered(true);
+      } else if (event.payload.type === 'leave') {
+        setIsHovered(false);
+      } else if (event.payload.type === 'drop') {
+        setIsHovered(false);
+        const paths = event.payload.paths;
+        
+        // Filter for PDF files only
+        const pdfPaths = paths.filter(p => p.toLowerCase().endsWith('.pdf'));
+        
+        if (pdfPaths.length > 0) {
+          if (multiple) {
+            const names = pdfPaths.map(p => p.split('/').pop() || p.split('\\').pop() || 'Selected File');
+            onFileSelect(pdfPaths, names);
+          } else {
+            const p = pdfPaths[0];
+            const name = p.split('/').pop() || p.split('\\').pop() || 'Selected File';
+            onFileSelect(p, name);
           }
         }
-      });
-    }
-
-    setupDragDrop();
+      }
+    });
 
     return () => {
-      if (unlisten) {
-        unlisten.then((f: any) => f());
-      }
+      unlistenPromise.then((unlisten) => unlisten());
     };
   }, [onFileSelect, multiple]);
 
