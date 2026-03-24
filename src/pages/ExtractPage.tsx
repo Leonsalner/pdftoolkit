@@ -6,7 +6,7 @@ import { useTauriCommand } from '../hooks/useTauriCommand';
 import { extractPages, getPdfPageCount } from '../lib/invoke';
 import { useI18n } from '../lib/i18n';
 import { save } from '@tauri-apps/plugin-dialog';
-import { initStore } from './SettingsPage';
+import { initStore } from '../lib/store';
 
 export function ExtractPage() {
   const { t } = useI18n();

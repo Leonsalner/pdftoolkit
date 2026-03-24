@@ -4,7 +4,8 @@ import { CompressPage } from "./pages/CompressPage";
 import { ExtractPage } from "./pages/ExtractPage";
 import { MergePage } from "./pages/MergePage";
 import { SplitPage } from "./pages/SplitPage";
-import { SettingsPage, initStore } from "./pages/SettingsPage";
+import { SettingsPage } from "./pages/SettingsPage";
+import { initStore } from "./lib/store";
 import { OcrPage } from "./pages/OcrPage";
 import { checkGhostscript } from "./lib/invoke";
 

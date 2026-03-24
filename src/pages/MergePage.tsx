@@ -5,7 +5,7 @@ import { useTauriCommand } from '../hooks/useTauriCommand';
 import { mergePdfs } from '../lib/invoke';
 import { useI18n } from '../lib/i18n';
 import { save } from '@tauri-apps/plugin-dialog';
-import { initStore } from './SettingsPage';
+import { initStore } from '../lib/store';
 
 interface FileItem {
   id: string;

@@ -1,13 +1,7 @@
 import { useState, useEffect } from 'react';
 import { open } from '@tauri-apps/plugin-dialog';
-import { load } from '@tauri-apps/plugin-store';
 import { useI18n } from '../lib/i18n';
-
-let store: any = null;
-export const initStore = async () => {
-  if (!store) store = await load('settings.json');
-  return store;
-};
+import { initStore } from '../lib/store';
 
 export function SettingsPage() {
   const { lang, setLang, t } = useI18n();

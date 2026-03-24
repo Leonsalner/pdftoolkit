@@ -5,7 +5,7 @@ import { useTauriCommand } from '../hooks/useTauriCommand';
 import { splitPdf, getPdfPageCount } from '../lib/invoke';
 import { useI18n } from '../lib/i18n';
 import { open } from '@tauri-apps/plugin-dialog';
-import { initStore } from './SettingsPage';
+import { initStore } from '../lib/store';
 
 type SplitMode = 'every_n' | 'ranges';
 
