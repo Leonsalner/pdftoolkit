@@ -7,6 +7,7 @@ import { useI18n } from '../lib/i18n';
 import { writeTextFile } from '@tauri-apps/plugin-fs';
 import { save } from '@tauri-apps/plugin-dialog';
 import { Page } from '../components/Sidebar';
+import { makeSearchablePdf } from '../lib/invoke';
 
 export interface OcrResult {
   text: string;
@@ -24,6 +25,7 @@ export function OcrPage({ notify, isActive }: OcrPageProps) {
   const { t } = useI18n();
   const [files, setFiles] = useState<BatchFile[]>([]);
   const [ocrLang, setOcrLang] = useState('eng');
+  const [ocrMode, setOcrMode] = useState<'extract' | 'searchable'>('extract');
   const [isProcessing, setIsProcessing] = useState(false);
 
   const pendingCount = files.filter((f) => f.status === 'pending').length;
@@ -68,14 +70,25 @@ export function OcrPage({ notify, isActive }: OcrPageProps) {
       );
 
       try {
-        const result = await extractTextOcr(file.path, ocrLang);
-        setFiles((prev) =>
-          prev.map((f) =>
-            f.id === file.id
-              ? { ...f, status: 'done' as const, result }
-              : f
-          )
-        );
+        if (ocrMode === 'searchable') {
+          const result = await makeSearchablePdf(file.path, ocrLang);
+          setFiles((prev) =>
+            prev.map((f) =>
+              f.id === file.id
+                ? { ...f, status: 'done' as const, result: { path: result.output_path } }
+                : f
+            )
+          );
+        } else {
+          const result = await extractTextOcr(file.path, ocrLang);
+          setFiles((prev) =>
+            prev.map((f) =>
+              f.id === file.id
+                ? { ...f, status: 'done' as const, result }
+                : f
+            )
+          );
+        }
         doneCount++;
       } catch (err) {
         setFiles((prev) =>
@@ -91,7 +104,7 @@ export function OcrPage({ notify, isActive }: OcrPageProps) {
     setIsProcessing(false);
 
     if (doneCount > 0 && !isActive) {
-      notify(t('ocr.success'), 'ocr');
+      notify(ocrMode === 'searchable' ? t('ocr.searchableSuccess') : t('ocr.success'), 'ocr');
     }
   };
 
@@ -124,10 +137,35 @@ export function OcrPage({ notify, isActive }: OcrPageProps) {
         </div>
 
         {files.length > 0 && (
+          <div className="flex gap-2 mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+            <button
+              onClick={() => setOcrMode('extract')}
+              className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                ocrMode === 'extract'
+                  ? 'bg-indigo-100 text-indigo-700 border-2 border-indigo-500 dark:bg-indigo-900/40 dark:text-indigo-300 dark:border-indigo-400'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700'
+              }`}
+            >
+              {t('ocr.modeExtract')}
+            </button>
+            <button
+              onClick={() => setOcrMode('searchable')}
+              className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                ocrMode === 'searchable'
+                  ? 'bg-indigo-100 text-indigo-700 border-2 border-indigo-500 dark:bg-indigo-900/40 dark:text-indigo-300 dark:border-indigo-400'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700'
+              }`}
+            >
+              {t('ocr.modeSearchable')}
+            </button>
+          </div>
+        )}
+
+        {files.length > 0 && (
           <BatchFileList
             files={files}
             onRemove={handleRemove}
-            onSaveText={handleSaveText}
+            onSaveText={ocrMode === 'extract' ? handleSaveText : undefined}
             t={t}
           />
         )}
@@ -190,14 +228,14 @@ export function OcrPage({ notify, isActive }: OcrPageProps) {
         {files.length > 0 && doneCount > 0 && (
           <ResultBanner
             type="success"
-            message={t('ocr.success')}
+            message={ocrMode === 'searchable' ? t('ocr.searchableSuccess') : t('ocr.success')}
           />
         )}
 
         {files.length > 0 && errorCount > 0 && (
           <ResultBanner
             type="error"
-            message={t('ocr.failed')}
+            message={ocrMode === 'searchable' ? t('ocr.searchableFailed') : t('ocr.failed')}
           />
         )}
       </div>

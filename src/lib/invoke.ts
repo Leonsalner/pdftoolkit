@@ -65,3 +65,113 @@ export const saveOrganizedPdf = (
   absoluteOutputPath?: string
 ) =>
   invoke<OrganizeResult>('save_organized_pdf', { inputPath, pageOrder, rotations, outputName, absoluteOutputPath });
+
+export interface ConvertResult {
+  output_path: string;
+  pages_converted: number;
+  output_mode: string;
+}
+
+export interface PdfMetadata {
+  title: string | null;
+  author: string | null;
+  subject: string | null;
+}
+
+export interface MetadataResult {
+  output_path: string;
+  overwritten: boolean;
+}
+
+export interface SearchableResult {
+  output_path: string;
+  pages_processed: number;
+}
+
+export interface WatermarkResult {
+  output_path: string;
+  pages_watermarked: number;
+}
+
+export interface SecurityResult {
+  output_path: string;
+}
+
+export interface SmartCardInfo {
+  name: string;
+  present: boolean;
+}
+
+export interface SignResult {
+  output_path: string;
+}
+
+export interface SystemSpecs {
+  ram_gb: number;
+  recommended_model: string;
+  model_url: string;
+}
+
+export const getAiSpecs = () => invoke<SystemSpecs>('get_ai_specs');
+export const checkModelExists = (modelName: string) => invoke<boolean>('check_model_exists', { modelName });
+export const downloadModel = (url: string, modelName: string) => invoke<string>('download_model', { url, modelName });
+export const startAiServer = (modelName: string) => invoke<void>('start_ai_server', { modelName });
+export const stopAiServer = () => invoke<void>('stop_ai_server');
+
+export const convertPdfToImages = (
+  inputPath: string, format: string, ranges: string | undefined,
+  outputMode: string, outputName?: string
+) => invoke<ConvertResult>('convert_pdf_to_images', { inputPath, format, ranges, outputMode, outputName });
+
+export const detectSmartCards = () =>
+  invoke<SmartCardInfo[]>('detect_smart_cards');
+
+export const signPdfFileBased = (
+  inputPath: string,
+  certPath: string,
+  certPassword: string,
+  outputName?: string
+) => invoke<SignResult>('sign_pdf_file_based', { inputPath, certPath, certPassword, outputName });
+
+export const addPdfSecurity = (
+  inputPath: string,
+  userPassword?: string,
+  ownerPassword?: string,
+  allowPrint: boolean = true,
+  allowCopy: boolean = true,
+  allowModify: boolean = true,
+  outputName?: string
+) => invoke<SecurityResult>('add_pdf_security', { 
+  inputPath, userPassword, ownerPassword, allowPrint, allowCopy, allowModify, outputName 
+});
+
+export const decryptPdf = (inputPath: string, password: string, outputName?: string) =>
+  invoke<SecurityResult>('decrypt_pdf', { inputPath, password, outputName });
+
+export const checkPdfEncrypted = (inputPath: string) =>
+  invoke<boolean>('check_pdf_encrypted', { inputPath });
+
+export const addTextWatermark = (
+  inputPath: string,
+  text: string,
+  pages: string | undefined,
+  fontSize: number,
+  opacity: number,
+  rotation: number,
+  color: [number, number, number],
+  outputName?: string
+) => invoke<WatermarkResult>('add_text_watermark', { 
+  inputPath, text, pages, fontSize, opacity, rotation, color, outputName 
+});
+
+export const getPdfMetadata = (inputPath: string) =>
+  invoke<PdfMetadata>('get_pdf_metadata', { inputPath });
+
+export const setPdfMetadata = (
+  inputPath: string, title: string, author: string, subject: string,
+  saveAsNew: boolean, outputName?: string
+) => invoke<MetadataResult>('set_pdf_metadata', { inputPath, title, author, subject, saveAsNew, outputName });
+
+export const makeSearchablePdf = (
+  inputPath: string, lang: string, outputName?: string, absoluteOutputPath?: string
+) => invoke<SearchableResult>('make_searchable_pdf', { inputPath, lang, outputName, absoluteOutputPath });

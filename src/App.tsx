@@ -8,6 +8,12 @@ import { SettingsPage } from "./pages/SettingsPage";
 import { OrganizePage } from "./pages/OrganizePage";
 import { initStore } from "./lib/store";
 import { OcrPage } from "./pages/OcrPage";
+import { ConvertPage } from "./pages/ConvertPage";
+import { WatermarkPage } from "./pages/WatermarkPage";
+import { SecurityPage } from "./pages/SecurityPage";
+import { SignPage } from "./pages/SignPage";
+import { AiPage } from "./pages/AiPage";
+import { MetadataPage } from "./pages/MetadataPage";
 import { checkGhostscript } from "./lib/invoke";
 
 interface Toast {
@@ -90,8 +96,26 @@ function App() {
         <div className={activePage === "split" ? "block" : "hidden"}>
           <SplitPage notify={notify} isActive={activePage === "split"} />
         </div>
+        <div className={activePage === "convert" ? "block" : "hidden"}>
+          <ConvertPage gsAvailable={gsAvailable} notify={notify} isActive={activePage === "convert"} />
+        </div>
+        <div className={activePage === "watermark" ? "block" : "hidden"}>
+          <WatermarkPage notify={notify} isActive={activePage === "watermark"} />
+        </div>
+        <div className={activePage === "security" ? "block" : "hidden"}>
+          <SecurityPage notify={notify} isActive={activePage === "security"} />
+        </div>
+        <div className={activePage === "sign" ? "block" : "hidden"}>
+          <SignPage notify={notify} isActive={activePage === "sign"} />
+        </div>
+        <div className={activePage === "ai" ? "block" : "hidden"}>
+          <AiPage notify={notify} isActive={activePage === "ai"} />
+        </div>
         <div className={activePage === "ocr" ? "block" : "hidden"}>
           <OcrPage notify={notify} isActive={activePage === "ocr"} />
+        </div>
+        <div className={activePage === "metadata" ? "block" : "hidden"}>
+          <MetadataPage notify={notify} isActive={activePage === "metadata"} />
         </div>
         <div className={activePage === "settings" ? "block" : "hidden"}>
           <SettingsPage />

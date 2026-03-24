@@ -11,6 +11,10 @@ if [[ "$OSTYPE" == "darwin"* ]] && ! command -v brew >/dev/null 2>&1; then
 fi
 
 # 1. Check for basic requirements
+if [ -f "$HOME/.cargo/env" ]; then
+    source "$HOME/.cargo/env"
+fi
+
 if ! command -v npm >/dev/null 2>&1; then
     echo "npm not found! Attempting to install Node.js via Homebrew..."
     command -v brew >/dev/null 2>&1 || { echo >&2 "brew is required to install node. Aborting."; exit 1; }
@@ -36,6 +40,18 @@ if ! command -v tesseract >/dev/null 2>&1; then
     brew install tesseract
 fi
 
+if ! command -v qpdf >/dev/null 2>&1; then
+    echo "qpdf not found! Attempting to install via Homebrew..."
+    command -v brew >/dev/null 2>&1 || { echo >&2 "brew is required to install qpdf. Aborting."; exit 1; }
+    brew install qpdf
+fi
+
+if ! command -v llama-server >/dev/null 2>&1; then
+    echo "llama.cpp not found! Attempting to install via Homebrew..."
+    command -v brew >/dev/null 2>&1 || { echo >&2 "brew is required to install llama.cpp. Aborting."; exit 1; }
+    brew install llama.cpp
+fi
+
 echo "All required dependencies are installed locally."
 
 # 3. Create Sidecar directories
@@ -49,14 +65,30 @@ echo "Detected target architecture: $TARGET"
 # 5. Copy Ghostscript executable
 GS_PATH=$(command -v gs)
 echo "Bundling Ghostscript from $GS_PATH..."
+rm -f "src-tauri/bin/gs-$TARGET"
 cp "$GS_PATH" "src-tauri/bin/gs-$TARGET"
 chmod +x "src-tauri/bin/gs-$TARGET"
 
 # 6. Copy Tesseract executable
 TESS_PATH=$(command -v tesseract)
 echo "Bundling Tesseract from $TESS_PATH..."
+rm -f "src-tauri/bin/tesseract-$TARGET"
 cp "$TESS_PATH" "src-tauri/bin/tesseract-$TARGET"
 chmod +x "src-tauri/bin/tesseract-$TARGET"
+
+# 6b. Copy qpdf executable
+QPDF_PATH=$(command -v qpdf)
+echo "Bundling qpdf from $QPDF_PATH..."
+rm -f "src-tauri/bin/qpdf-$TARGET"
+cp "$QPDF_PATH" "src-tauri/bin/qpdf-$TARGET"
+chmod +x "src-tauri/bin/qpdf-$TARGET"
+
+# 6c. Copy llama-server executable
+LLAMA_PATH=$(command -v llama-server)
+echo "Bundling llama-server from $LLAMA_PATH..."
+rm -f "src-tauri/bin/llama-server-$TARGET"
+cp "$LLAMA_PATH" "src-tauri/bin/llama-server-$TARGET"
+chmod +x "src-tauri/bin/llama-server-$TARGET"
 
 # 7. Copy Tesseract language data (tessdata)
 # Finding tessdata path. On Homebrew, it's usually at $(brew --prefix tesseract)/share/tessdata

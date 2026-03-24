@@ -1,6 +1,6 @@
 import { useI18n } from '../lib/i18n';
 
-export type Page = 'compress' | 'extract' | 'merge' | 'split' | 'ocr' | 'settings' | 'organize';
+export type Page = 'compress' | 'extract' | 'merge' | 'split' | 'convert' | 'watermark' | 'security' | 'sign' | 'ai' | 'ocr' | 'organize' | 'metadata' | 'settings';
 
 interface SidebarProps {
   activePage: Page;
@@ -15,8 +15,14 @@ export function Sidebar({ activePage, onNavigate }: SidebarProps) {
     { id: 'extract' as Page, label: t('nav.extract') },
     { id: 'merge' as Page, label: t('nav.merge') },
     { id: 'split' as Page, label: t('nav.split') },
+    { id: 'convert' as Page, label: t('nav.convert') },
+    { id: 'watermark' as Page, label: t('nav.watermark') },
+    { id: 'security' as Page, label: t('nav.security') },
+    { id: 'sign' as Page, label: t('nav.sign') },
+    { id: 'ai' as Page, label: t('nav.ai') },
     { id: 'ocr' as Page, label: t('nav.ocr') },
     { id: 'organize' as Page, label: t('nav.organize') },
+    { id: 'metadata' as Page, label: t('nav.metadata') },
   ];
 
   return (
@@ -24,7 +30,7 @@ export function Sidebar({ activePage, onNavigate }: SidebarProps) {
       <div className="p-4 border-b border-gray-200 dark:border-gray-800 transition-colors duration-300">
         <h1 className="text-lg font-bold text-gray-900 dark:text-white flex items-baseline space-x-2 transition-colors duration-300">
           <span>{t('app.title')}</span>
-          <span className="text-[10px] font-normal text-gray-400 dark:text-gray-500 uppercase tracking-wider">v1.1</span>
+          <span className="text-[10px] font-normal text-gray-400 dark:text-gray-500 uppercase tracking-wider">v2.0</span>
         </h1>
       </div>
       <nav className="flex-1 p-4 space-y-1">

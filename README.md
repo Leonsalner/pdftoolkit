@@ -8,8 +8,16 @@ A fast, fully local macOS desktop PDF utility application built with Tauri 2.x, 
 - **Page Extraction**: Extract specific pages or page ranges from large PDF documents effortlessly using `lopdf`.
 - **Merge PDFs**: Combine multiple PDF files into a single document with drag-and-drop reordering.
 - **Split PDF**: Break a single PDF down into specific chunks of N pages or by custom ranges.
-- **Text Recognition (OCR)**: Extract text from scanned PDFs completely offline using the bundled Tesseract OCR engine (supports English and Slovak).
-- **Settings**: Fully customizable output directory, dynamic Light/Dark/System theme switching, and full UI translation (English/Slovak).
+- **Format Conversion**: Convert PDF pages to high-res PNG or JPEG images and export them as a subfolder or ZIP archive.
+- **Metadata Editor**: Read and edit Title, Author, and Subject fields of documents, saving as new or overwriting.
+- **Text Recognition (OCR)**: Extract text from scanned PDFs completely offline using the bundled Tesseract OCR engine (supports English, Slovak, and Czech).
+- **Searchable PDF Generator**: Overlay OCR text onto scanned PDFs to make them selectable and searchable.
+- **Page Organizer**: Visually rearrange, rotate, or delete individual pages in a grid view.
+- **Watermarking**: Batch apply text stamps to specific pages with customizable font size, rotation, opacity, and color.
+- **Security Suite**: Apply robust AES-256 encryption, passwords, and permission management (allow printing, copying, etc.) via bundled `qpdf`. Decrypt files effortlessly.
+- **Digital Signatures**: Sign documents locally using PKCS#12 certificates or hardware smart cards (eID).
+- **Local AI Assistant**: Chat with your documents securely using a 100% offline, privacy-first Local AI model (`Qwen 2.5`), powered by an optimized Metal-accelerated `llama.cpp` sidecar.
+- **Settings**: Fully customizable output directory, dynamic Light/Dark/System theme switching, and full UI translation (English/Slovak/Czech).
 - **Local & Private**: All processing happens entirely offline on your machine. No documents are uploaded to any server.
 
 ## Prerequisites
@@ -19,7 +27,7 @@ Before building or running the application, ensure you have the following instal
 - [Node.js](https://nodejs.org/) (v18 or newer recommended)
 - [Rust](https://www.rust-lang.org/tools/install) (`rustup`, `cargo`, `rustc`)
 
-**Note:** Ghostscript and Tesseract OCR are bundled locally as Tauri sidecars for a standalone experience!
+**Note:** Ghostscript, Tesseract OCR, qpdf, and llama.cpp are bundled locally as Tauri sidecars for a standalone experience!
 
 ## Getting Started
 

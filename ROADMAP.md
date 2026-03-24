@@ -12,12 +12,12 @@
 
 ## High Priority (V1.2 - New Capabilities)
 
-## Feature Expansion (V1.2 - New Capabilities)
-4. **Format Conversion** (Diff: 5/10)
+## Feature Expansion (V1.2 - New Capabilities) - ✅ Completed
+4. **Format Conversion** (Diff: 5/10) - ✅
    - Convert PDF pages to high-res PNG/JPEG images.
-5. **Metadata Editor** (Diff: 2/10)
+5. **Metadata Editor** (Diff: 2/10) - ✅
    - Edit Title, Author, and Subject fields of documents.
-6. **"Searchable PDF" Generator** (Diff: 7/10)
+6. **"Searchable PDF" Generator** (Diff: 7/10) - ✅
    - Overlay OCR text onto scanned PDFs to make them selectable/searchable.
 
 ## Advanced Tools (V2.0 - Security & Pro Features)

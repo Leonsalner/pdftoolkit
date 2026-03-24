@@ -1,6 +1,12 @@
+pub mod ai;
 pub mod compress;
+pub mod convert;
 pub mod extract;
 pub mod merge;
+pub mod metadata;
 pub mod ocr;
 pub mod organize;
+pub mod security;
+pub mod sign;
 pub mod split;
+pub mod watermark;
