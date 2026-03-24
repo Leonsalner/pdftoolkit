@@ -6,6 +6,7 @@ import { mergePdfs } from '../lib/invoke';
 import { useI18n } from '../lib/i18n';
 import { save } from '@tauri-apps/plugin-dialog';
 import { initStore } from '../lib/store';
+import { Page } from '../components/Sidebar';
 
 interface FileItem {
   id: string;
@@ -13,7 +14,12 @@ interface FileItem {
   name: string;
 }
 
-export function MergePage() {
+interface MergePageProps {
+  notify: (message: string, sourcePage: Page) => void;
+  isActive: boolean;
+}
+
+export function MergePage({ notify, isActive }: MergePageProps) {
   const { t } = useI18n();
   const [files, setFiles] = useState<FileItem[]>([]);
   const [customFileName, setCustomFileName] = useState('');
@@ -79,7 +85,10 @@ export function MergePage() {
       absolutePath = selectedPath;
     }
 
-    execute(files.map(f => f.path), customFileName, absolutePath);
+    const res = await execute(files.map(f => f.path), customFileName, absolutePath);
+    if (res && !isActive) {
+      notify(t('merge.success'), 'merge');
+    }
   };
 
   const handleStartOver = () => {
@@ -160,7 +169,7 @@ export function MergePage() {
           <ResultBanner
             type="success"
             message={t('merge.success')}
-            details={`Saved to: ${result.output_path} | ${result.files_merged} files combined`}
+            details={`${t('common.savedTo')} ${result.output_path} | ${result.files_merged} ${t('merge.filesCombined')}`}
           />
         )}
       </div>

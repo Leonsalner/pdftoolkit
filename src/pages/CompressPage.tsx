@@ -7,12 +7,15 @@ import { compressPdf, getFileSize, Preset } from '../lib/invoke';
 import { useI18n } from '../lib/i18n';
 import { save } from '@tauri-apps/plugin-dialog';
 import { initStore } from '../lib/store';
+import { Page } from '../components/Sidebar';
 
 interface CompressPageProps {
   gsAvailable: boolean;
+  notify: (message: string, sourcePage: Page) => void;
+  isActive: boolean;
 }
 
-export function CompressPage({ gsAvailable }: CompressPageProps) {
+export function CompressPage({ gsAvailable, notify, isActive }: CompressPageProps) {
   const { t } = useI18n();
   const [filePath, setFilePath] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -63,7 +66,10 @@ export function CompressPage({ gsAvailable }: CompressPageProps) {
       absolutePath = selectedPath;
     }
 
-    execute(filePath, preset, customFileName, absolutePath);
+    const res = await execute(filePath, preset, customFileName, absolutePath);
+    if (res && !isActive) {
+      notify(t('compress.success'), 'compress');
+    }
   };
 
   const handleStartOver = () => {
@@ -160,7 +166,7 @@ export function CompressPage({ gsAvailable }: CompressPageProps) {
           <ResultBanner
             type="success"
             message={t('compress.success')}
-            details={`Saved to: ${result.output_path} | Reduced to ${(result.compressed_size / 1024 / 1024).toFixed(2)} MB`}
+            details={`${t('common.savedTo')} ${result.output_path} | ${t('compress.reducedTo')} ${(result.compressed_size / 1024 / 1024).toFixed(2)} MB`}
           />
         )}
       </div>

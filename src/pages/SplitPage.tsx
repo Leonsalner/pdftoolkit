@@ -6,10 +6,16 @@ import { splitPdf, getPdfPageCount } from '../lib/invoke';
 import { useI18n } from '../lib/i18n';
 import { open } from '@tauri-apps/plugin-dialog';
 import { initStore } from '../lib/store';
+import { Page } from '../components/Sidebar';
 
 type SplitMode = 'every_n' | 'ranges';
 
-export function SplitPage() {
+interface SplitPageProps {
+  notify: (message: string, sourcePage: Page) => void;
+  isActive: boolean;
+}
+
+export function SplitPage({ notify, isActive }: SplitPageProps) {
   const { t } = useI18n();
   const [filePath, setFilePath] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -61,7 +67,10 @@ export function SplitPage() {
       absoluteDir = selectedDir;
     }
 
-    execute(filePath, mode, value, customPrefix, absoluteDir);
+    const res = await execute(filePath, mode, value, customPrefix, absoluteDir);
+    if (res && !isActive) {
+      notify(t('split.success'), 'split');
+    }
   };
 
   const handleStartOver = () => {
@@ -86,7 +95,7 @@ export function SplitPage() {
             <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800 flex justify-between items-center transition-all duration-300">
               <div className="flex flex-col truncate mr-4">
                 <span className="font-medium truncate">{fileName}</span>
-                {totalPages && <span className="text-xs text-gray-500">{totalPages} pages</span>}
+                {totalPages && <span className="text-xs text-gray-500">{totalPages} {t('extract.pagesLower')}</span>}
               </div>
               <button onClick={handleStartOver} className="text-sm text-gray-500 hover:text-red-500 flex-shrink-0 transition-colors">
                 {t('common.change')}
@@ -169,7 +178,7 @@ export function SplitPage() {
           <ResultBanner
             type="success"
             message={t('split.success')}
-            details={`Generated ${result.total_files} files.`}
+            details={`${t('split.generated')} ${result.total_files} ${t('split.files')}.`}
           />
         )}
       </div>

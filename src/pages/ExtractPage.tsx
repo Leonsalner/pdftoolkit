@@ -7,8 +7,14 @@ import { extractPages, getPdfPageCount } from '../lib/invoke';
 import { useI18n } from '../lib/i18n';
 import { save } from '@tauri-apps/plugin-dialog';
 import { initStore } from '../lib/store';
+import { Page } from '../components/Sidebar';
 
-export function ExtractPage() {
+interface ExtractPageProps {
+  notify: (message: string, sourcePage: Page) => void;
+  isActive: boolean;
+}
+
+export function ExtractPage({ notify, isActive }: ExtractPageProps) {
   const { t } = useI18n();
   const [filePath, setFilePath] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -70,7 +76,10 @@ export function ExtractPage() {
       absolutePath = selectedPath;
     }
 
-    performExtract(filePath, rangeInput, customFileName, absolutePath);
+    const res = await performExtract(filePath, rangeInput, customFileName, absolutePath);
+    if (res && !isActive) {
+      notify(t('extract.success'), 'extract');
+    }
   };
 
   return (
@@ -144,7 +153,7 @@ export function ExtractPage() {
           <ResultBanner
             type="success"
             message={t('extract.success')}
-            details={`Saved to: ${result.output_path} | Extracted ${result.pages_extracted} pages`}
+            details={`${t('common.savedTo')} ${result.output_path} | ${t('extract.extracted')} ${result.pages_extracted} ${t('extract.pagesLower')}`}
           />
         )}
       </div>

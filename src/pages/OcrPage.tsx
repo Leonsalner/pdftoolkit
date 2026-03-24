@@ -6,6 +6,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useI18n } from '../lib/i18n';
 import { writeTextFile } from '@tauri-apps/plugin-fs';
 import { save } from '@tauri-apps/plugin-dialog';
+import { Page } from '../components/Sidebar';
 
 export interface OcrResult {
   text: string;
@@ -14,7 +15,12 @@ export interface OcrResult {
 const extractTextOcr = (inputPath: string, lang: string) =>
   invoke<OcrResult>('extract_text_ocr', { inputPath, lang });
 
-export function OcrPage() {
+interface OcrPageProps {
+  notify: (message: string, sourcePage: Page) => void;
+  isActive: boolean;
+}
+
+export function OcrPage({ notify, isActive }: OcrPageProps) {
   const { t } = useI18n();
   const [filePath, setFilePath] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -30,9 +36,12 @@ export function OcrPage() {
     reset();
   };
 
-  const handleExtract = () => {
+  const handleExtract = async () => {
     if (filePath) {
-      execute(filePath, ocrLang);
+      const res = await execute(filePath, ocrLang);
+      if (res && !isActive) {
+        notify(t('ocr.success'), 'ocr');
+      }
     }
   };
 
