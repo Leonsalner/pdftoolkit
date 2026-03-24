@@ -64,10 +64,17 @@ export function CompressPage({ gsAvailable }: CompressPageProps) {
           <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">1. Select File</h3>
           {filePath ? (
             <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800 flex justify-between items-center">
-              <span className="font-medium truncate">{fileName}</span>
+              <div className="flex flex-col truncate mr-4">
+                <span className="font-medium truncate">{fileName}</span>
+                {fileSize && (
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    Original Size: {(fileSize / 1024 / 1024).toFixed(2)} MB
+                  </span>
+                )}
+              </div>
               <button
                 onClick={handleStartOver}
-                className="text-sm text-gray-500 hover:text-red-500"
+                className="text-sm text-gray-500 hover:text-red-500 flex-shrink-0"
               >
                 Change
               </button>
