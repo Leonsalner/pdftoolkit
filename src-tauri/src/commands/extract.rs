@@ -1,6 +1,6 @@
 use serde::Serialize;
 use lopdf::Document;
-use crate::utils::paths::{downloads_dir, output_filename};
+use crate::utils::paths::{get_output_dir, output_filename};
 
 #[derive(Serialize)]
 pub struct ExtractResult {
@@ -15,7 +15,7 @@ pub async fn get_pdf_page_count(input_path: String) -> Result<u32, String> {
 }
 
 #[tauri::command]
-pub async fn extract_pages(input_path: String, ranges: String, output_name: Option<String>) -> Result<ExtractResult, String> {
+pub async fn extract_pages(app: tauri::AppHandle, input_path: String, ranges: String, output_name: Option<String>) -> Result<ExtractResult, String> {
     let mut doc = Document::load(&input_path).map_err(|e| format!("Failed to read PDF: {}", e))?;
     let total_pages = doc.get_pages().len() as u32;
 
@@ -76,7 +76,7 @@ pub async fn extract_pages(input_path: String, ranges: String, output_name: Opti
     
     doc.delete_pages(&pages_to_delete);
 
-    let downloads = downloads_dir()?;
+    let out_dir = get_output_dir(&app)?;
     
     let file_name = match output_name {
         Some(name) if !name.trim().is_empty() => {
@@ -92,7 +92,7 @@ pub async fn extract_pages(input_path: String, ranges: String, output_name: Opti
         }
     };
     
-    let output_path = downloads.join(file_name);
+    let output_path = out_dir.join(file_name);
     let output_str = output_path.to_string_lossy().to_string();
 
     doc.save(&output_path).map_err(|e| format!("Failed to write output: {}", e))?;

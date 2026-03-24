@@ -1,8 +1,8 @@
-use std::process::Command;
 use std::fs;
 use std::path::Path;
 use serde::Serialize;
-use crate::utils::paths::{downloads_dir, output_filename};
+use tauri_plugin_shell::ShellExt;
+use crate::utils::paths::{get_output_dir, output_filename};
 
 #[derive(Serialize)]
 pub struct CompressResult {
@@ -12,7 +12,7 @@ pub struct CompressResult {
 }
 
 #[tauri::command]
-pub async fn compress_pdf(input_path: String, preset: String, output_name: Option<String>) -> Result<CompressResult, String> {
+pub async fn compress_pdf(app: tauri::AppHandle, input_path: String, preset: String, output_name: Option<String>) -> Result<CompressResult, String> {
     if !Path::new(&input_path).exists() {
         return Err(format!("File not found: {}", input_path));
     }
@@ -22,7 +22,7 @@ pub async fn compress_pdf(input_path: String, preset: String, output_name: Optio
         return Err(format!("Invalid preset: {}. Use screen, ebook, printer, or prepress", preset));
     }
 
-    let downloads = downloads_dir()?;
+    let out_dir = get_output_dir(&app)?;
     let file_name = match output_name {
         Some(name) if !name.trim().is_empty() => {
             if name.to_lowercase().ends_with(".pdf") {
@@ -34,14 +34,15 @@ pub async fn compress_pdf(input_path: String, preset: String, output_name: Optio
         _ => output_filename(&input_path, "compressed"),
     };
     
-    let output_path = downloads.join(file_name);
+    let output_path = out_dir.join(file_name);
     let output_str = output_path.to_string_lossy().to_string();
 
     let original_size = fs::metadata(&input_path)
         .map_err(|e| format!("Failed to read original file size: {}", e))?
         .len();
 
-    let output = Command::new("gs")
+    let output = app.shell().sidecar("gs")
+        .map_err(|e| format!("Failed to initialize Ghostscript sidecar: {}", e))?
         .args([
             "-sDEVICE=pdfwrite",
             "-dCompatibilityLevel=1.4",
@@ -53,7 +54,8 @@ pub async fn compress_pdf(input_path: String, preset: String, output_name: Optio
             &input_path,
         ])
         .output()
-        .map_err(|_| "Ghostscript (gs) not found. Install with: brew install ghostscript".to_string())?;
+        .await
+        .map_err(|e| format!("Failed to execute Ghostscript sidecar: {}", e))?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -72,9 +74,14 @@ pub async fn compress_pdf(input_path: String, preset: String, output_name: Optio
 }
 
 #[tauri::command]
-pub async fn check_ghostscript() -> Result<bool, String> {
-    match Command::new("gs").arg("--version").output() {
-        Ok(output) => Ok(output.status.success()),
+pub async fn check_ghostscript(app: tauri::AppHandle) -> Result<bool, String> {
+    match app.shell().sidecar("gs") {
+        Ok(cmd) => {
+            match cmd.arg("--version").output().await {
+                Ok(output) => Ok(output.status.success()),
+                Err(_) => Ok(false),
+            }
+        }
         Err(_) => Ok(false),
     }
 }

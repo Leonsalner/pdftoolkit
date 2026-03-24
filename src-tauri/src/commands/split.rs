@@ -1,6 +1,6 @@
 use serde::Serialize;
 use lopdf::Document;
-use crate::utils::paths::downloads_dir;
+use crate::utils::paths::get_output_dir;
 use std::path::Path;
 
 #[derive(Serialize)]
@@ -10,7 +10,7 @@ pub struct SplitResult {
 }
 
 #[tauri::command]
-pub async fn split_pdf(input_path: String, mode: String, value: String, output_prefix: Option<String>) -> Result<SplitResult, String> {
+pub async fn split_pdf(app: tauri::AppHandle, input_path: String, mode: String, value: String, output_prefix: Option<String>) -> Result<SplitResult, String> {
     let doc = Document::load(&input_path).map_err(|e| format!("Failed to read PDF: {}", e))?;
     let total_pages = doc.get_pages().len() as u32;
 
@@ -91,7 +91,7 @@ pub async fn split_pdf(input_path: String, mode: String, value: String, output_p
         return Err("No chunks to split into".to_string());
     }
 
-    let downloads = downloads_dir()?;
+    let out_dir = get_output_dir(&app)?;
     
     let base_name = match output_prefix {
         Some(name) if !name.trim().is_empty() => name,
@@ -117,7 +117,7 @@ pub async fn split_pdf(input_path: String, mode: String, value: String, output_p
         new_doc.delete_pages(&pages_to_delete);
         
         let file_name = format!("{}_part{}.pdf", base_name, i + 1);
-        let output_path = downloads.join(file_name);
+        let output_path = out_dir.join(file_name);
         let output_str = output_path.to_string_lossy().to_string();
         
         new_doc.save(&output_path).map_err(|e| format!("Failed to write output: {}", e))?;

@@ -1,4 +1,4 @@
-export type Page = 'compress' | 'extract' | 'merge' | 'split';
+export type Page = 'compress' | 'extract' | 'merge' | 'split' | 'ocr' | 'settings';
 
 interface SidebarProps {
   activePage: Page;
@@ -11,6 +11,7 @@ export function Sidebar({ activePage, onNavigate }: SidebarProps) {
     { id: 'extract' as Page, label: 'Extract Pages' },
     { id: 'merge' as Page, label: 'Merge PDFs' },
     { id: 'split' as Page, label: 'Split PDF' },
+    { id: 'ocr' as Page, label: 'Local OCR' },
   ];
 
   return (
@@ -38,6 +39,19 @@ export function Sidebar({ activePage, onNavigate }: SidebarProps) {
           );
         })}
       </nav>
+      
+      <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+        <button
+          onClick={() => onNavigate('settings')}
+          className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+            activePage === 'settings'
+              ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
+              : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
+          }`}
+        >
+          Settings
+        </button>
+      </div>
     </div>
   );
 }

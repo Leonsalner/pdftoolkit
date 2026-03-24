@@ -1,7 +1,7 @@
-use std::process::Command;
 use std::path::Path;
 use serde::Serialize;
-use crate::utils::paths::{downloads_dir, output_filename};
+use tauri_plugin_shell::ShellExt;
+use crate::utils::paths::{get_output_dir, output_filename};
 
 #[derive(Serialize)]
 pub struct MergeResult {
@@ -10,7 +10,7 @@ pub struct MergeResult {
 }
 
 #[tauri::command]
-pub async fn merge_pdfs(file_paths: Vec<String>, output_name: Option<String>) -> Result<MergeResult, String> {
+pub async fn merge_pdfs(app: tauri::AppHandle, file_paths: Vec<String>, output_name: Option<String>) -> Result<MergeResult, String> {
     if file_paths.is_empty() {
         return Err("No files provided for merging".to_string());
     }
@@ -21,7 +21,7 @@ pub async fn merge_pdfs(file_paths: Vec<String>, output_name: Option<String>) ->
         }
     }
 
-    let downloads = downloads_dir()?;
+    let out_dir = get_output_dir(&app)?;
     let file_name = match output_name {
         Some(name) if !name.trim().is_empty() => {
             if name.to_lowercase().ends_with(".pdf") {
@@ -33,7 +33,7 @@ pub async fn merge_pdfs(file_paths: Vec<String>, output_name: Option<String>) ->
         _ => output_filename(&file_paths[0], "merged"),
     };
 
-    let output_path = downloads.join(file_name);
+    let output_path = out_dir.join(file_name);
     let output_str = output_path.to_string_lossy().to_string();
 
     let mut args = vec![
@@ -48,10 +48,12 @@ pub async fn merge_pdfs(file_paths: Vec<String>, output_name: Option<String>) ->
         args.push(path.clone());
     }
 
-    let output = Command::new("gs")
-        .args(&args)
+    let output = app.shell().sidecar("gs")
+        .map_err(|e| format!("Failed to initialize Ghostscript sidecar: {}", e))?
+        .args(args)
         .output()
-        .map_err(|_| "Ghostscript (gs) not found. Install with: brew install ghostscript".to_string())?;
+        .await
+        .map_err(|e| format!("Failed to execute Ghostscript sidecar: {}", e))?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
