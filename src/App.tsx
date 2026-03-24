@@ -23,10 +23,12 @@ function App() {
     async function loadTheme() {
       const s = await initStore();
       const theme = await s.get('theme');
-      if (theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) || (theme === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.documentElement.setAttribute('data-theme', 'dark');
+      const systemIsDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      
+      if (theme === 'dark' || (theme === 'system' && systemIsDark) || (!theme && systemIsDark)) {
+        document.documentElement.classList.add('dark');
       } else {
-        document.documentElement.removeAttribute('data-theme');
+        document.documentElement.classList.remove('dark');
       }
     }
     loadTheme();
@@ -37,9 +39,9 @@ function App() {
       const theme = await s.get('theme');
       if (theme === 'system' || !theme) {
         if (e.matches) {
-          document.documentElement.setAttribute('data-theme', 'dark');
+          document.documentElement.classList.add('dark');
         } else {
-          document.documentElement.removeAttribute('data-theme');
+          document.documentElement.classList.remove('dark');
         }
       }
     };

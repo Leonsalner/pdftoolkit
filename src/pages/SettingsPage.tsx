@@ -57,10 +57,11 @@ export function SettingsPage() {
     await s.save();
     
     // Apply theme immediately
-    if (newTheme === 'dark' || (newTheme === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      document.documentElement.setAttribute('data-theme', 'dark');
+    const systemIsDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (newTheme === 'dark' || (newTheme === 'system' && systemIsDark)) {
+      document.documentElement.classList.add('dark');
     } else {
-      document.documentElement.removeAttribute('data-theme');
+      document.documentElement.classList.remove('dark');
     }
   };
 
