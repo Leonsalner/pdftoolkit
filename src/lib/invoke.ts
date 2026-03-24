@@ -13,14 +13,17 @@ export interface ExtractResult {
 
 export type Preset = 'screen' | 'ebook' | 'printer' | 'prepress';
 
-export const compressPdf = (inputPath: string, preset: Preset) =>
-  invoke<CompressResult>('compress_pdf', { inputPath, preset });
+export const compressPdf = (inputPath: string, preset: Preset, outputName?: string) =>
+  invoke<CompressResult>('compress_pdf', { inputPath, preset, outputName });
 
-export const extractPages = (inputPath: string, ranges: string) =>
-  invoke<ExtractResult>('extract_pages', { inputPath, ranges });
+export const extractPages = (inputPath: string, ranges: string, outputName?: string) =>
+  invoke<ExtractResult>('extract_pages', { inputPath, ranges, outputName });
 
 export const getPdfPageCount = (inputPath: string) =>
   invoke<number>('get_pdf_page_count', { inputPath });
 
 export const checkGhostscript = () =>
   invoke<boolean>('check_ghostscript');
+
+export const getFileSize = (inputPath: string) =>
+  invoke<number>('get_file_size', { inputPath });

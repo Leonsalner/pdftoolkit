@@ -15,7 +15,7 @@ pub async fn get_pdf_page_count(input_path: String) -> Result<u32, String> {
 }
 
 #[tauri::command]
-pub async fn extract_pages(input_path: String, ranges: String) -> Result<ExtractResult, String> {
+pub async fn extract_pages(input_path: String, ranges: String, output_name: Option<String>) -> Result<ExtractResult, String> {
     let mut doc = Document::load(&input_path).map_err(|e| format!("Failed to read PDF: {}", e))?;
     let total_pages = doc.get_pages().len() as u32;
 
@@ -77,7 +77,21 @@ pub async fn extract_pages(input_path: String, ranges: String) -> Result<Extract
     doc.delete_pages(&pages_to_delete);
 
     let downloads = downloads_dir()?;
-    let file_name = output_filename(&input_path, "extracted");
+    
+    let file_name = match output_name {
+        Some(name) if !name.trim().is_empty() => {
+            if name.to_lowercase().ends_with(".pdf") {
+                name
+            } else {
+                format!("{}.pdf", name)
+            }
+        }
+        _ => {
+            let sanitized_ranges = ranges.replace(',', "_").replace(' ', "");
+            output_filename(&input_path, &sanitized_ranges)
+        }
+    };
+    
     let output_path = downloads.join(file_name);
     let output_str = output_path.to_string_lossy().to_string();
 

@@ -9,6 +9,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::compress::compress_pdf,
             commands::compress::check_ghostscript,
+            commands::compress::get_file_size,
             commands::extract::extract_pages,
             commands::extract::get_pdf_page_count,
         ])

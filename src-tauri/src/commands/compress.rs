@@ -12,7 +12,7 @@ pub struct CompressResult {
 }
 
 #[tauri::command]
-pub async fn compress_pdf(input_path: String, preset: String) -> Result<CompressResult, String> {
+pub async fn compress_pdf(input_path: String, preset: String, output_name: Option<String>) -> Result<CompressResult, String> {
     if !Path::new(&input_path).exists() {
         return Err(format!("File not found: {}", input_path));
     }
@@ -23,7 +23,17 @@ pub async fn compress_pdf(input_path: String, preset: String) -> Result<Compress
     }
 
     let downloads = downloads_dir()?;
-    let file_name = output_filename(&input_path, "compressed");
+    let file_name = match output_name {
+        Some(name) if !name.trim().is_empty() => {
+            if name.to_lowercase().ends_with(".pdf") {
+                name
+            } else {
+                format!("{}.pdf", name)
+            }
+        }
+        _ => output_filename(&input_path, "compressed"),
+    };
+    
     let output_path = downloads.join(file_name);
     let output_str = output_path.to_string_lossy().to_string();
 
@@ -67,4 +77,11 @@ pub async fn check_ghostscript() -> Result<bool, String> {
         Ok(output) => Ok(output.status.success()),
         Err(_) => Ok(false),
     }
+}
+
+#[tauri::command]
+pub async fn get_file_size(input_path: String) -> Result<u64, String> {
+    fs::metadata(&input_path)
+        .map(|m| m.len())
+        .map_err(|e| format!("Failed to read file size: {}", e))
 }
