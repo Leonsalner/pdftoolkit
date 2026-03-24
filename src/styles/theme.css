@@ -1,0 +1,93 @@
+@import "tailwindcss";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+@import "@fontsource/jetbrains-mono/400.css";
+
+@custom-variant dark (.dark &);
+
+@theme {
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+:root {
+  /* Backgrounds - Zinc/Slate Light */
+  --bg-base: #fafafa;
+  --bg-surface: #ffffff;
+  --bg-elevated: #ffffff;
+
+  /* Text - Zinc */
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-disabled: #a1a1aa;
+
+  /* Borders & Shadows */
+  --border: #e4e4e7;
+  --border-hover: #d4d4d8;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+
+  /* Status */
+  --success: #10b981;
+  --success-bg: #d1fae5;
+  --error: #ef4444;
+  --error-bg: #fee2e2;
+
+  /* Category Accents (Light) */
+  --cat-documents: #3b82f6;      
+  --cat-documents-bg: #eff6ff;
+  --cat-content: #10b981;        
+  --cat-content-bg: #ecfdf5;
+  --cat-security: #f59e0b;       
+  --cat-security-bg: #fffbeb;
+  --cat-intelligence: #8b5cf6;   
+  --cat-intelligence-bg: #f5f3ff;
+  
+  --cat-global: #64748b;         
+  --cat-global-bg: #f8fafc;
+}
+
+.dark {
+  /* Backgrounds - Zinc/Slate Dark */
+  --bg-base: #09090b;
+  --bg-surface: #18181b;
+  --bg-elevated: #27272a;
+
+  /* Text - Zinc */
+  --text-primary: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-disabled: #52525b;
+
+  /* Borders & Shadows */
+  --border: #27272a;
+  --border-hover: #3f3f46;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+
+  /* Status */
+  --success: #34d399;
+  --success-bg: rgba(16, 185, 129, 0.1);
+  --error: #f87171;
+  --error-bg: rgba(239, 68, 68, 0.1);
+
+  /* Category Accents (Dark) */
+  --cat-documents: #60a5fa;      
+  --cat-documents-bg: rgba(59, 130, 246, 0.15);
+  --cat-content: #34d399;        
+  --cat-content-bg: rgba(16, 185, 129, 0.15);
+  --cat-security: #fbbf24;       
+  --cat-security-bg: rgba(245, 158, 11, 0.15);
+  --cat-intelligence: #a78bfa;   
+  --cat-intelligence-bg: rgba(139, 92, 246, 0.15);
+
+  --cat-global: #94a3b8;         
+  --cat-global-bg: rgba(100, 116, 139, 0.15);
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+}
