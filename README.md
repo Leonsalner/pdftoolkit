@@ -22,39 +22,46 @@ A fast, fully local macOS desktop PDF utility application built with Tauri 2.x, 
 
 ## Prerequisites
 
-Before building or running the application, ensure you have the following installed on your system:
+The only requirement before getting started is:
 
-- [Node.js](https://nodejs.org/) (v18 or newer recommended)
-- [Rust](https://www.rust-lang.org/tools/install) (`rustup`, `cargo`, `rustc`)
+- **macOS** (the application is built for macOS)
+- **Homebrew** (will be auto-installed on macOS if missing)
 
-**Note:** Ghostscript, Tesseract OCR, qpdf, and llama.cpp are bundled locally as Tauri sidecars for a standalone experience!
+That's it! Node.js, Rust, and all external binaries (Ghostscript, Tesseract, qpdf, llama.cpp) are automatically installed and configured by the setup script.
 
-## Getting Started
+## Quick Start
 
-1. **Local Setup:**
-   Run the autoinstall script to automatically fetch and bundle the required Ghostscript and Tesseract binaries (and language packs) for your machine architecture:
+1. **Run the Setup Script:**
+   The automated setup script will install and configure everything you need:
    ```bash
    ./setup_env.sh
    ```
 
-2. **Install Dependencies:**
-   Install the frontend Node dependencies:
+   This script will:
+   - Install Homebrew (if not already present)
+   - Install Node.js (if not already installed)
+   - Install Rust via rustup (if not already installed)
+   - Install Ghostscript, Tesseract OCR, qpdf, and llama.cpp via Homebrew
+   - Bundle these external binaries as Tauri sidecars for your machine architecture
+   - Download Tesseract language data packs for English, Slovak, and Czech
+
+2. **Install JavaScript Dependencies:**
    ```bash
    npm install
    ```
 
-3. **Development Mode:**
-   Run the application in development mode with Hot Module Replacement (HMR). This will automatically compile the Rust backend and open the application window:
+3. **Start Development Mode:**
+   Run the application with Hot Module Replacement (HMR). This automatically compiles the Rust backend and launches the application window:
    ```bash
    npm run tauri dev
    ```
 
-4. **Building for Production:**
-   To build a standalone release artifact (e.g., `.app` / `.dmg` on macOS):
+4. **Build for Production:**
+   Create a standalone release artifact (`.app` / `.dmg` on macOS):
    ```bash
    npm run tauri build
    ```
-   The compiled binaries will be available in `src-tauri/target/release/bundle/`.
+   Compiled binaries will be available in `src-tauri/target/release/bundle/`.
 
 ## Project Structure
 
