@@ -7,6 +7,7 @@ import { useI18n } from '../lib/i18n';
 import { save } from '@tauri-apps/plugin-dialog';
 import { initStore } from '../lib/store';
 import { Page } from '../components/Sidebar';
+import { ArrowUp, ArrowDown, X } from 'lucide-react';
 
 interface FileItem {
   id: string;
@@ -98,29 +99,52 @@ export function MergePage({ notify, isActive }: MergePageProps) {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('merge.title')}</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('merge.desc')}</p>
+    <div className="max-w-4xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-500 h-full overflow-y-auto">
+      <div className="mb-8 border-b border-[var(--border)] pb-6 flex justify-between items-end">
+        <div>
+          <h2 className="text-2xl font-semibold text-[var(--text-primary)]">{t('merge.title')}</h2>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">{t('merge.desc')}</p>
+        </div>
+        {!result && files.length >= 2 && (
+          <button
+            onClick={handleMerge}
+            disabled={loading}
+            className="py-2.5 px-6 rounded-lg font-semibold transition-all duration-300 shadow-sm bg-[var(--text-primary)] text-[var(--bg-base)] hover:bg-[var(--text-secondary)] active:scale-[0.99] text-sm"
+          >
+            {loading ? t('merge.buttonLoading') : t('merge.button')}
+          </button>
+        )}
       </div>
 
       <div className="space-y-8">
         <div>
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('common.step1.add')}</h3>
+          <div className="flex justify-between items-end mb-3">
+            <h3 className="text-sm font-medium text-[var(--text-primary)]">{t('common.step1.add')}</h3>
+            {files.length > 0 && (
+              <span className="text-xs font-medium text-[var(--text-secondary)]">{files.length} files selected</span>
+            )}
+          </div>
           <DropZone onFileSelect={handleFileSelect} multiple={true} />
           
           {files.length > 0 && (
-            <div className="mt-4 space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="mt-6 space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
               {files.map((file, index) => (
-                <div key={file.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 dark:bg-gray-800 transition-all duration-200">
+                <div key={file.id} className="flex items-center justify-between p-3 border border-[var(--border)] rounded-xl bg-[var(--bg-surface)] hover:border-[var(--border-hover)] transition-all duration-200 shadow-sm group">
                   <div className="flex items-center flex-1 min-w-0 mr-4">
-                    <span className="w-6 text-gray-400 text-sm">{index + 1}.</span>
-                    <span className="font-medium truncate text-gray-900 dark:text-gray-200">{file.name}</span>
+                    <span className="w-8 text-[var(--text-disabled)] text-sm font-mono">{index + 1}.</span>
+                    <span className="font-medium truncate text-[var(--text-primary)]">{file.name}</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <button onClick={() => moveUp(index)} disabled={index === 0} className="p-1 text-gray-500 hover:text-indigo-600 disabled:opacity-30 transition-colors">▲</button>
-                    <button onClick={() => moveDown(index)} disabled={index === files.length - 1} className="p-1 text-gray-500 hover:text-indigo-600 disabled:opacity-30 transition-colors">▼</button>
-                    <button onClick={() => removeFile(file.id)} className="p-1 ml-2 text-red-500 hover:text-red-700 transition-colors">✕</button>
+                  <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => moveUp(index)} disabled={index === 0} className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] rounded-md disabled:opacity-30 transition-colors">
+                      <ArrowUp size={16} />
+                    </button>
+                    <button onClick={() => moveDown(index)} disabled={index === files.length - 1} className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] rounded-md disabled:opacity-30 transition-colors">
+                      <ArrowDown size={16} />
+                    </button>
+                    <div className="w-px h-4 bg-[var(--border)] mx-1" />
+                    <button onClick={() => removeFile(file.id)} className="p-1.5 text-[var(--text-disabled)] hover:text-[var(--error)] hover:bg-[var(--error-bg)] rounded-md transition-colors">
+                      <X size={16} />
+                    </button>
                   </div>
                 </div>
               ))}
@@ -129,38 +153,25 @@ export function MergePage({ notify, isActive }: MergePageProps) {
         </div>
 
         {files.length > 0 && !askEveryTime && (
-          <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('merge.step2')}</h3>
+          <div className="animate-in fade-in slide-in-from-top-2 duration-300 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl p-6 shadow-sm">
+            <h3 className="text-sm font-medium text-[var(--text-primary)] mb-3">{t('merge.step2')}</h3>
             <input
               type="text"
               value={customFileName}
               onChange={(e) => setCustomFileName(e.target.value)}
               placeholder="merged.pdf"
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white px-3 py-2 border placeholder-gray-400 transition-colors"
+              className="block w-full max-w-md rounded-md border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-sm focus:border-[var(--text-secondary)] focus:ring-1 focus:ring-[var(--text-secondary)] sm:text-sm px-3 py-2 outline-none transition-colors"
             />
           </div>
         )}
 
-        {!result ? (
-          <div>
-            <button
-              onClick={handleMerge}
-              disabled={files.length < 2 || loading}
-              className={`w-full py-3 px-4 rounded-lg text-white font-medium transition-all duration-300 ${
-                files.length < 2 || loading
-                  ? 'bg-gray-400 cursor-not-allowed opacity-70'
-                  : 'bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98]'
-              }`}
-            >
-              {loading ? t('merge.buttonLoading') : t('merge.button')}
-            </button>
-            {files.length === 1 && <p className="text-xs text-gray-500 mt-2 text-center">{t('merge.minFiles')}</p>}
-          </div>
-        ) : (
-          <div className="animate-in fade-in zoom-in-95 duration-500">
+        {files.length === 1 && <p className="text-sm text-[var(--text-secondary)] mt-2 italic">{t('merge.minFiles')}</p>}
+
+        {result && (
+          <div className="animate-in fade-in zoom-in-95 duration-500 max-w-md mx-auto mt-8">
             <button
               onClick={handleStartOver}
-              className="w-full py-3 px-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 active:scale-[0.98]"
+              className="w-full py-3.5 px-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-primary)] font-semibold hover:bg-[var(--bg-elevated)] transition-all duration-300 active:scale-[0.99] shadow-sm"
             >
               {t('merge.buttonAnother')}
             </button>

@@ -60,7 +60,6 @@ export function SplitPage({ notify, isActive }: SplitPageProps) {
 
     let absoluteDir = undefined;
     if (askEveryTime) {
-      // Split generates multiple files, so ask for directory instead of file
       const selectedDir = await open({
         directory: true,
         multiple: false,
@@ -87,127 +86,136 @@ export function SplitPage({ notify, isActive }: SplitPageProps) {
   const defaultPrefix = fileName ? fileName.replace(/\.pdf$/i, '') : '';
 
   return (
-    <div className="max-w-3xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('split.title')}</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('split.desc')}</p>
+    <div className="max-w-5xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-500 h-full overflow-y-auto">
+      <div className="mb-8 border-b border-[var(--border)] pb-6">
+        <h2 className="text-2xl font-semibold text-[var(--text-primary)]">{t('split.title')}</h2>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">{t('split.desc')}</p>
       </div>
 
-      <div className="space-y-8">
-        <div>
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('common.step1')}</h3>
-          {filePath ? (
-            <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800 flex justify-between items-center transition-all duration-300">
-              <div className="flex flex-col truncate mr-4">
-                <span className="font-medium truncate">{fileName}</span>
-                {totalPages && <span className="text-xs text-gray-500">{totalPages} {t('extract.pagesLower')}</span>}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 xl:gap-12">
+        {/* Left Column: Input */}
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-sm font-medium text-[var(--text-primary)] mb-3">{t('common.step1')}</h3>
+            {filePath ? (
+              <div className="p-4 border border-[var(--border)] rounded-xl bg-[var(--bg-surface)] flex justify-between items-center transition-all duration-300 shadow-sm">
+                <div className="flex flex-col truncate mr-4">
+                  <span className="font-medium text-[var(--text-primary)] truncate">{fileName}</span>
+                  {totalPages && <span className="text-xs text-[var(--text-secondary)] mt-0.5">{totalPages} {t('extract.pagesLower')}</span>}
+                </div>
+                <button onClick={handleStartOver} className="text-sm text-[var(--text-secondary)] hover:text-[var(--error)] flex-shrink-0 transition-colors">
+                  {t('common.change')}
+                </button>
               </div>
-              <button onClick={handleStartOver} className="text-sm text-gray-500 hover:text-red-500 flex-shrink-0 transition-colors">
-                {t('common.change')}
-              </button>
-            </div>
-          ) : (
-            <DropZone onFileSelect={handleFileSelect} />
-          )}
-        </div>
-
-        <div className={filePath ? "animate-in fade-in slide-in-from-top-2 duration-300" : ""}>
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('split.step2')}</h3>
-          <div className="space-y-3 p-4 border rounded-lg bg-white dark:bg-gray-800 dark:border-gray-700 transition-colors">
-            <label className="flex items-center space-x-3 cursor-pointer">
-              <input type="radio" name="split_mode" value="every_n" checked={mode === 'every_n'} onChange={() => {setMode('every_n'); setValue('1');}} className="text-indigo-600 focus:ring-indigo-500" />
-              <span className="text-gray-700 dark:text-gray-300 font-medium text-sm">{t('split.mode.single')}</span>
-            </label>
-
-            <label className="flex items-center space-x-3 cursor-pointer">
-              <input type="radio" name="split_mode" value="ranges" checked={mode === 'ranges'} onChange={() => {setMode('ranges'); setValue('');}} className="text-indigo-600 focus:ring-indigo-500" />
-              <span className="text-gray-700 dark:text-gray-300 font-medium text-sm">{t('split.mode.ranges')}</span>
-            </label>
-          </div>
-
-          <div className="mt-4 animate-in fade-in zoom-in-95 duration-300">
-            <input
-              type="text"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              placeholder={
-                mode === 'every_n' ? "e.g., 1 (split into single pages), 2 (split every 2 pages)" :
-                "e.g., 1-5, 8-10"
-              }
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white px-3 py-2 border placeholder-gray-400 transition-colors"
-            />
-            {mode === 'ranges' && filePath && totalPages && (
-              <button
-                onClick={() => setShowThumbnailPicker(true)}
-                className="mt-3 w-full py-2 px-4 rounded-lg border border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 font-medium transition-colors text-sm"
-              >
-                {t('thumbnail.title')}
-              </button>
+            ) : (
+              <DropZone onFileSelect={handleFileSelect} />
             )}
           </div>
         </div>
 
-        {filePath && !askEveryTime && (
-          <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('split.step3')}</h3>
-            <input
-              type="text"
-              value={customPrefix}
-              onChange={(e) => setCustomPrefix(e.target.value)}
-              placeholder={`${defaultPrefix}_part1.pdf`}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white px-3 py-2 border placeholder-gray-400 dark:placeholder-gray-500 transition-colors"
-            />
-            <p className="text-xs text-gray-500 mt-1">Files will be generated as [prefix]_part1.pdf, [prefix]_part2.pdf, etc.</p>
-          </div>
-        )}
+        {/* Right Column: Options */}
+        <div className={`space-y-8 transition-opacity duration-300 ${filePath ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+          <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl p-6 shadow-sm space-y-6">
+            <div>
+              <h3 className="text-sm font-medium text-[var(--text-primary)] mb-3">{t('split.step2')}</h3>
+              <div className="flex bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg p-1 mb-4">
+                <button 
+                  onClick={() => {setMode('every_n'); setValue('1');}} 
+                  className={`flex-1 py-1.5 px-3 text-sm font-medium rounded-md transition-colors ${mode === 'every_n' ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm border border-[var(--border)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                >
+                  {t('split.mode.single')}
+                </button>
+                <button 
+                  onClick={() => {setMode('ranges'); setValue('');}} 
+                  className={`flex-1 py-1.5 px-3 text-sm font-medium rounded-md transition-colors ${mode === 'ranges' ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm border border-[var(--border)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                >
+                  {t('split.mode.ranges')}
+                </button>
+              </div>
 
-        {!result ? (
-          <div>
+              <div className="animate-in fade-in zoom-in-95 duration-300">
+                <input
+                  type="text"
+                  value={value}
+                  onChange={(e) => setValue(e.target.value)}
+                  placeholder={
+                    mode === 'every_n' ? "e.g., 1 (split into single pages), 2 (split every 2 pages)" :
+                    "e.g., 1-5, 8-10"
+                  }
+                  className="block w-full rounded-md border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-sm focus:border-[var(--text-secondary)] focus:ring-1 focus:ring-[var(--text-secondary)] sm:text-sm px-3 py-2 outline-none transition-colors"
+                />
+                {mode === 'ranges' && filePath && totalPages && (
+                  <button
+                    onClick={() => setShowThumbnailPicker(true)}
+                    className="mt-3 w-full py-2 px-4 rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] hover:bg-[var(--border)] transition-colors text-sm font-medium shadow-sm"
+                  >
+                    {t('thumbnail.title')}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {!askEveryTime && (
+              <div className="pt-2">
+                <h3 className="text-sm font-medium text-[var(--text-primary)] mb-3">{t('split.step3')}</h3>
+                <input
+                  type="text"
+                  value={customPrefix}
+                  onChange={(e) => setCustomPrefix(e.target.value)}
+                  placeholder={`${defaultPrefix}_part1.pdf`}
+                  className="block w-full rounded-md border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-sm focus:border-[var(--text-secondary)] focus:ring-1 focus:ring-[var(--text-secondary)] sm:text-sm px-3 py-2 outline-none transition-colors"
+                />
+                <p className="text-xs text-[var(--text-disabled)] mt-2">Outputs: [prefix]_part1.pdf, [prefix]_part2.pdf, etc.</p>
+              </div>
+            )}
+          </div>
+
+          {!result ? (
             <button
               onClick={handleSplit}
               disabled={!filePath || !value.trim() || loading}
-              className={`w-full py-3 px-4 rounded-lg text-white font-medium transition-all duration-300 ${
+              className={`w-full py-3.5 px-4 rounded-xl font-semibold transition-all duration-300 shadow-sm ${
                 !filePath || !value.trim() || loading
-                  ? 'bg-gray-400 cursor-not-allowed opacity-70'
-                  : 'bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98]'
+                  ? 'bg-[var(--bg-elevated)] text-[var(--text-disabled)] border border-[var(--border)] cursor-not-allowed'
+                  : 'bg-[var(--text-primary)] text-[var(--bg-base)] hover:bg-[var(--text-secondary)] active:scale-[0.99]'
               }`}
             >
               {loading ? t('split.buttonLoading') : t('split.button')}
             </button>
-          </div>
-        ) : (
-          <div className="animate-in fade-in zoom-in-95 duration-500">
-            <button
-              onClick={handleStartOver}
-              className="w-full py-3 px-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 active:scale-[0.98]"
-            >
-              {t('split.buttonAnother')}
-            </button>
-          </div>
-        )}
+          ) : (
+            <div className="animate-in fade-in zoom-in-95 duration-500">
+              <button
+                onClick={handleStartOver}
+                className="w-full py-3.5 px-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-primary)] font-semibold hover:bg-[var(--bg-elevated)] transition-all duration-300 active:scale-[0.99] shadow-sm"
+              >
+                {t('split.buttonAnother')}
+              </button>
+            </div>
+          )}
 
-        {error && <ResultBanner type="error" message={t('split.failed')} details={error} />}
-        {result && (
-          <ResultBanner
-            type="success"
-            message={t('split.success')}
-            details={`${t('split.generated')} ${result.total_files} ${t('split.files')}.`}
-          />
-        )}
-
-        {filePath && totalPages && (
-          <ThumbnailPickerModal
-            isOpen={showThumbnailPicker}
-            inputPath={filePath}
-            totalPages={totalPages}
-            onConfirm={(pages) => {
-              setValue(rangesToString(pages));
-              setShowThumbnailPicker(false);
-            }}
-            onClose={() => setShowThumbnailPicker(false)}
-          />
-        )}
+          {error && <ResultBanner type="error" message={t('split.failed')} details={error} />}
+          {result && (
+            <ResultBanner
+              type="success"
+              message={t('split.success')}
+              details={`${t('split.generated')} ${result.total_files} ${t('split.files')}.`}
+            />
+          )}
+        </div>
       </div>
+
+      {filePath && totalPages && (
+        <ThumbnailPickerModal
+          isOpen={showThumbnailPicker}
+          inputPath={filePath}
+          totalPages={totalPages}
+          onConfirm={(pages) => {
+            setValue(rangesToString(pages));
+            setShowThumbnailPicker(false);
+          }}
+          onClose={() => setShowThumbnailPicker(false)}
+        />
+      )}
     </div>
   );
 }

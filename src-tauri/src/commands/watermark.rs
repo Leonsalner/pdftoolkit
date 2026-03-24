@@ -91,7 +91,8 @@ pub async fn add_text_watermark(
                 Operation::new("Q", vec![]),
             ],
         };
-        let watermark_id = doc.add_object(Stream::new(Dictionary::new(), content.encode().unwrap()));
+        let encoded_content = content.encode().map_err(|e| format!("Failed to encode content: {}", e))?;
+        let watermark_id = doc.add_object(Stream::new(Dictionary::new(), encoded_content));
 
         let page_id = *doc.get_pages().get(&(page_num as u32)).ok_or("Page missing")?;
         

@@ -73,9 +73,9 @@ export function ConvertPage({ gsAvailable, notify, isActive }: ConvertPageProps)
 
   if (!gsAvailable) {
     return (
-      <div className="max-w-3xl mx-auto p-8 text-center mt-20">
-        <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{t('compress.gsRequired')}</h2>
-        <p className="text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg inline-block font-mono text-sm">
+      <div className="max-w-5xl mx-auto p-8 text-center mt-20">
+        <h2 className="text-2xl font-bold mb-4 text-[var(--text-primary)]">{t('compress.gsRequired')}</h2>
+        <p className="text-[var(--text-secondary)] bg-[var(--bg-surface)] border border-[var(--border)] p-4 rounded-xl inline-block font-mono text-sm">
           {t('compress.gsInstall')}
         </p>
       </div>
@@ -83,68 +83,80 @@ export function ConvertPage({ gsAvailable, notify, isActive }: ConvertPageProps)
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('convert.title')}</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('convert.desc')}</p>
+    <div className="max-w-5xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-500 h-full overflow-y-auto">
+      <div className="mb-8 border-b border-[var(--border)] pb-6">
+        <h2 className="text-2xl font-semibold text-[var(--text-primary)]">{t('convert.title')}</h2>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">{t('convert.desc')}</p>
       </div>
 
-      <div className="space-y-8">
-        <div>
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('common.step1')}</h3>
-          {filePath ? (
-            <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800 flex justify-between items-center transition-all duration-300">
-              <span className="font-medium truncate">{fileName}</span>
-              <button
-                onClick={handleStartOver}
-                className="text-sm text-gray-500 hover:text-red-500 transition-colors"
-              >
-                {t('common.change')}
-              </button>
-            </div>
-          ) : (
-            <DropZone onFileSelect={handleFileSelect} />
-          )}
-          {pageCountError && <p className="mt-2 text-sm text-red-500">{pageCountError}</p>}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 xl:gap-12">
+        {/* Left Column: Input */}
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-sm font-medium text-[var(--text-primary)] mb-3">{t('common.step1')}</h3>
+            {filePath ? (
+              <div className="p-4 border border-[var(--border)] rounded-xl bg-[var(--bg-surface)] flex justify-between items-center transition-all duration-300 shadow-sm">
+                <span className="font-medium text-[var(--text-primary)] truncate pr-4">{fileName}</span>
+                <button
+                  onClick={handleStartOver}
+                  className="text-sm text-[var(--text-secondary)] hover:text-[var(--error)] transition-colors flex-shrink-0"
+                >
+                  {t('common.change')}
+                </button>
+              </div>
+            ) : (
+              <DropZone onFileSelect={handleFileSelect} />
+            )}
+            {pageCountError && <p className="mt-2 text-sm text-[var(--error)]">{pageCountError}</p>}
+          </div>
         </div>
 
-        {filePath && (
-          <div className="animate-in fade-in slide-in-from-top-2 duration-300 space-y-6">
+        {/* Right Column: Options & Action */}
+        <div className={`space-y-8 transition-opacity duration-300 ${filePath ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+          <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl p-6 shadow-sm space-y-6">
             <div>
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('convert.format')}</h3>
-              <div className="flex gap-4">
-                <label className="flex items-center space-x-2">
-                  <input type="radio" checked={format === 'png'} onChange={() => { setFormat('png'); resetConvert(); }} />
-                  <span className="text-sm dark:text-gray-300">{t('convert.formatPng')}</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input type="radio" checked={format === 'jpeg'} onChange={() => { setFormat('jpeg'); resetConvert(); }} />
-                  <span className="text-sm dark:text-gray-300">{t('convert.formatJpeg')}</span>
-                </label>
+              <h3 className="text-sm font-medium text-[var(--text-primary)] mb-3">{t('convert.format')}</h3>
+              <div className="flex bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg p-1">
+                <button 
+                  onClick={() => { setFormat('png'); resetConvert(); }} 
+                  className={`flex-1 py-1.5 px-3 text-sm font-medium rounded-md transition-colors ${format === 'png' ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm border border-[var(--border)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                >
+                  {t('convert.formatPng')}
+                </button>
+                <button 
+                  onClick={() => { setFormat('jpeg'); resetConvert(); }} 
+                  className={`flex-1 py-1.5 px-3 text-sm font-medium rounded-md transition-colors ${format === 'jpeg' ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm border border-[var(--border)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                >
+                  {t('convert.formatJpeg')}
+                </button>
               </div>
             </div>
 
             <div>
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('convert.outputMode')}</h3>
-              <div className="flex gap-4">
-                <label className="flex items-center space-x-2">
-                  <input type="radio" checked={outputMode === 'subfolder'} onChange={() => { setOutputMode('subfolder'); resetConvert(); }} />
-                  <span className="text-sm dark:text-gray-300">{t('convert.outputModeFolder')}</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input type="radio" checked={outputMode === 'zip'} onChange={() => { setOutputMode('zip'); resetConvert(); }} />
-                  <span className="text-sm dark:text-gray-300">{t('convert.outputModeZip')}</span>
-                </label>
+              <h3 className="text-sm font-medium text-[var(--text-primary)] mb-3">{t('convert.outputMode')}</h3>
+              <div className="flex bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg p-1">
+                <button 
+                  onClick={() => { setOutputMode('subfolder'); resetConvert(); }} 
+                  className={`flex-1 py-1.5 px-3 text-sm font-medium rounded-md transition-colors ${outputMode === 'subfolder' ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm border border-[var(--border)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                >
+                  {t('convert.outputModeFolder')}
+                </button>
+                <button 
+                  onClick={() => { setOutputMode('zip'); resetConvert(); }} 
+                  className={`flex-1 py-1.5 px-3 text-sm font-medium rounded-md transition-colors ${outputMode === 'zip' ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm border border-[var(--border)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                >
+                  {t('convert.outputModeZip')}
+                </button>
               </div>
             </div>
 
             <div>
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('convert.step4')}</h3>
+              <h3 className="text-sm font-medium text-[var(--text-primary)] mb-3">{t('convert.step4')}</h3>
               <RangeInput value={rangeInput} onChange={(val) => { setRangeInput(val); resetConvert(); }} totalPages={totalPages || null} />
               {totalPages && (
                 <button
                   onClick={() => setShowThumbnailPicker(true)}
-                  className="mt-3 w-full py-2 px-4 rounded-lg border border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 font-medium transition-colors text-sm"
+                  className="mt-3 w-full py-2 px-4 rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] hover:bg-[var(--border)] transition-colors text-sm font-medium shadow-sm"
                 >
                   {t('thumbnail.title')}
                 </button>
@@ -152,49 +164,49 @@ export function ConvertPage({ gsAvailable, notify, isActive }: ConvertPageProps)
             </div>
 
             <div>
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('convert.step5')}</h3>
+              <h3 className="text-sm font-medium text-[var(--text-primary)] mb-3">{t('convert.step5')}</h3>
               <input
                 type="text"
                 value={customFileName}
                 onChange={(e) => setCustomFileName(e.target.value)}
                 placeholder={defaultOutputName}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white px-3 py-2 border placeholder-gray-400 dark:placeholder-gray-500 transition-colors"
+                className="block w-full rounded-md border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-sm focus:border-[var(--text-secondary)] focus:ring-1 focus:ring-[var(--text-secondary)] sm:text-sm px-3 py-2 outline-none transition-colors"
               />
             </div>
-
-            {!result ? (
-              <button
-                onClick={handleConvert}
-                disabled={loading}
-                className={`w-full py-3 px-4 rounded-lg text-white font-medium transition-all duration-300 ${
-                  loading
-                    ? 'bg-gray-400 cursor-not-allowed opacity-70'
-                    : 'bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98]'
-                }`}
-              >
-                {loading ? t('convert.buttonLoading') : t('convert.button')}
-              </button>
-            ) : (
-              <div className="animate-in fade-in zoom-in-95 duration-500">
-                <button
-                  onClick={handleStartOver}
-                  className="w-full py-3 px-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 active:scale-[0.98]"
-                >
-                  {t('extract.buttonAnother')}
-                </button>
-              </div>
-            )}
-            
-            {convertError && <ResultBanner type="error" message={t('convert.failed')} details={convertError} />}
-            {result && (
-              <ResultBanner
-                type="success"
-                message={t('convert.success')}
-                details={`${t('common.savedTo')} ${result.output_path} | ${result.pages_converted} ${t('convert.pagesConverted')}`}
-              />
-            )}
           </div>
-        )}
+
+          {!result ? (
+            <button
+              onClick={handleConvert}
+              disabled={loading}
+              className={`w-full py-3.5 px-4 rounded-xl font-semibold transition-all duration-300 shadow-sm ${
+                loading
+                  ? 'bg-[var(--bg-elevated)] text-[var(--text-disabled)] border border-[var(--border)] cursor-not-allowed'
+                  : 'bg-[var(--text-primary)] text-[var(--bg-base)] hover:bg-[var(--text-secondary)] active:scale-[0.99]'
+              }`}
+            >
+              {loading ? t('convert.buttonLoading') : t('convert.button')}
+            </button>
+          ) : (
+            <div className="animate-in fade-in zoom-in-95 duration-500">
+              <button
+                onClick={handleStartOver}
+                className="w-full py-3.5 px-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-primary)] font-semibold hover:bg-[var(--bg-elevated)] transition-all duration-300 active:scale-[0.99] shadow-sm"
+              >
+                {t('extract.buttonAnother')}
+              </button>
+            </div>
+          )}
+          
+          {convertError && <ResultBanner type="error" message={t('convert.failed')} details={convertError} />}
+          {result && (
+            <ResultBanner
+              type="success"
+              message={t('convert.success')}
+              details={`${t('common.savedTo')} ${result.output_path} | ${result.pages_converted} ${t('convert.pagesConverted')}`}
+            />
+          )}
+        </div>
 
         {filePath && totalPages && (
           <ThumbnailPickerModal

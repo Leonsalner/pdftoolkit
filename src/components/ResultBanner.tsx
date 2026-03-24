@@ -6,18 +6,29 @@ interface ResultBannerProps {
 
 export function ResultBanner({ type, message, details }: ResultBannerProps) {
   const isSuccess = type === 'success';
-  const bgColor = isSuccess ? 'bg-emerald-50 dark:bg-emerald-900/10' : 'bg-red-50 dark:bg-red-900/10';
-  const borderColor = isSuccess ? 'border-emerald-200 dark:border-emerald-800' : 'border-red-200 dark:border-red-800';
-  const textColor = isSuccess ? 'text-emerald-800 dark:text-emerald-300' : 'text-red-800 dark:text-red-300';
-  const titleColor = isSuccess ? 'text-emerald-900 dark:text-emerald-200' : 'text-red-900 dark:text-red-200';
 
   return (
-    <div className={`p-4 rounded-lg border ${bgColor} ${borderColor} mt-4`}>
+    <div 
+      className="p-4 rounded-lg border mt-4"
+      style={{
+        backgroundColor: isSuccess ? 'var(--success-bg)' : 'var(--error-bg)',
+        borderColor: isSuccess ? 'var(--success)' : 'var(--error)',
+        opacity: 0.9
+      }}
+    >
       <div className="flex">
-        <div className="ml-3">
-          <h3 className={`text-sm font-medium ${titleColor}`}>{message}</h3>
+        <div className="ml-2">
+          <h3 
+            className="text-sm font-medium"
+            style={{ color: isSuccess ? 'var(--success)' : 'var(--error)' }}
+          >
+            {message}
+          </h3>
           {details && (
-            <div className={`mt-2 text-sm ${textColor}`}>
+            <div 
+              className="mt-1 text-sm opacity-90"
+              style={{ color: isSuccess ? 'var(--success)' : 'var(--error)' }}
+            >
               <p>{details}</p>
             </div>
           )}

@@ -85,105 +85,114 @@ export function ExtractPage({ notify, isActive }: ExtractPageProps) {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('extract.title')}</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('extract.desc')}</p>
+    <div className="max-w-5xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-500 h-full overflow-y-auto">
+      <div className="mb-8 border-b border-[var(--border)] pb-6">
+        <h2 className="text-2xl font-semibold text-[var(--text-primary)]">{t('extract.title')}</h2>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">{t('extract.desc')}</p>
       </div>
 
-      <div className="space-y-8">
-        <div>
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('common.step1')}</h3>
-          {filePath ? (
-            <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800 flex justify-between items-center transition-all duration-300">
-              <span className="font-medium truncate">{fileName}</span>
-              <button
-                onClick={handleStartOver}
-                className="text-sm text-gray-500 hover:text-red-500 transition-colors"
-              >
-                {t('common.change')}
-              </button>
-            </div>
-          ) : (
-            <DropZone onFileSelect={handleFileSelect} />
-          )}
-          {pageCountError && <p className="mt-2 text-sm text-red-500">{pageCountError}</p>}
-        </div>
-
-        <div className={filePath ? "animate-in fade-in slide-in-from-top-2 duration-300" : ""}>
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('extract.step2')}</h3>
-          <RangeInput value={rangeInput} onChange={(val) => { setRangeInput(val); resetExtract(); }} totalPages={totalPages || null} />
-          {filePath && totalPages && (
-            <button
-              onClick={() => setShowThumbnailPicker(true)}
-              className="mt-3 w-full py-2 px-4 rounded-lg border border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 font-medium transition-colors text-sm"
-            >
-              {t('thumbnail.title')}
-            </button>
-          )}
-        </div>
-
-        {filePath && !askEveryTime && (
-          <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('extract.step3')}</h3>
-            <input
-              type="text"
-              value={customFileName}
-              onChange={(e) => setCustomFileName(e.target.value)}
-              placeholder={`${defaultOutputName}.pdf`}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white px-3 py-2 border placeholder-gray-400 dark:placeholder-gray-500 transition-colors"
-            />
-          </div>
-        )}
-
-        {!result ? (
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 xl:gap-12">
+        {/* Left Column: Input */}
+        <div className="space-y-6">
           <div>
+            <h3 className="text-sm font-medium text-[var(--text-primary)] mb-3">{t('common.step1')}</h3>
+            {filePath ? (
+              <div className="p-4 border border-[var(--border)] rounded-xl bg-[var(--bg-surface)] flex justify-between items-center transition-all duration-300 shadow-sm">
+                <div className="flex flex-col min-w-0 pr-4">
+                  <span className="font-medium text-[var(--text-primary)] truncate">{fileName}</span>
+                  {totalPages && <span className="text-xs text-[var(--text-secondary)] mt-0.5">{totalPages} pages</span>}
+                </div>
+                <button
+                  onClick={handleStartOver}
+                  className="text-sm text-[var(--text-secondary)] hover:text-[var(--error)] transition-colors flex-shrink-0"
+                >
+                  {t('common.change')}
+                </button>
+              </div>
+            ) : (
+              <DropZone onFileSelect={handleFileSelect} />
+            )}
+            {pageCountError && <p className="mt-2 text-sm text-[var(--error)]">{pageCountError}</p>}
+          </div>
+        </div>
+
+        {/* Right Column: Options & Action */}
+        <div className={`space-y-8 transition-opacity duration-300 ${filePath ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+          <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl p-6 shadow-sm space-y-6">
+            <div>
+              <h3 className="text-sm font-medium text-[var(--text-primary)] mb-3">{t('extract.step2')}</h3>
+              <RangeInput value={rangeInput} onChange={(val) => { setRangeInput(val); resetExtract(); }} totalPages={totalPages || null} />
+              {filePath && totalPages && (
+                <button
+                  onClick={() => setShowThumbnailPicker(true)}
+                  className="mt-3 w-full py-2 px-4 rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] hover:bg-[var(--border)] transition-colors text-sm font-medium shadow-sm"
+                >
+                  {t('thumbnail.title')}
+                </button>
+              )}
+            </div>
+
+            {!askEveryTime && (
+              <div>
+                <h3 className="text-sm font-medium text-[var(--text-primary)] mb-3">{t('extract.step3')}</h3>
+                <input
+                  type="text"
+                  value={customFileName}
+                  onChange={(e) => setCustomFileName(e.target.value)}
+                  placeholder={`${defaultOutputName}.pdf`}
+                  className="block w-full rounded-md border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-sm focus:border-[var(--text-secondary)] focus:ring-1 focus:ring-[var(--text-secondary)] sm:text-sm px-3 py-2 outline-none transition-colors"
+                />
+              </div>
+            )}
+          </div>
+
+          {!result ? (
             <button
               onClick={handleExtract}
               disabled={!filePath || !rangeInput || loading}
-              className={`w-full py-3 px-4 rounded-lg text-white font-medium transition-all duration-300 ${
+              className={`w-full py-3.5 px-4 rounded-xl font-semibold transition-all duration-300 shadow-sm ${
                 !filePath || !rangeInput || loading
-                  ? 'bg-gray-400 cursor-not-allowed opacity-70'
-                  : 'bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98]'
+                  ? 'bg-[var(--bg-elevated)] text-[var(--text-disabled)] border border-[var(--border)] cursor-not-allowed'
+                  : 'bg-[var(--text-primary)] text-[var(--bg-base)] hover:bg-[var(--text-secondary)] active:scale-[0.99]'
               }`}
             >
               {loading ? t('extract.buttonLoading') : t('extract.button')}
             </button>
-          </div>
-        ) : (
-          <div className="animate-in fade-in zoom-in-95 duration-500">
-            <button
-              onClick={handleStartOver}
-              className="w-full py-3 px-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 active:scale-[0.98]"
-            >
-              {t('extract.buttonAnother')}
-            </button>
-          </div>
-        )}
+          ) : (
+            <div className="animate-in fade-in zoom-in-95 duration-500">
+              <button
+                onClick={handleStartOver}
+                className="w-full py-3.5 px-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-primary)] font-semibold hover:bg-[var(--bg-elevated)] transition-all duration-300 active:scale-[0.99] shadow-sm"
+              >
+                {t('extract.buttonAnother')}
+              </button>
+            </div>
+          )}
 
-        {extractError && <ResultBanner type="error" message={t('extract.failed')} details={extractError} />}
-        {result && (
-          <ResultBanner
-            type="success"
-            message={t('extract.success')}
-            details={`${t('common.savedTo')} ${result.output_path} | ${t('extract.extracted')} ${result.pages_extracted} ${t('extract.pagesLower')}`}
-          />
-        )}
-
-        {filePath && totalPages && (
-          <ThumbnailPickerModal
-            isOpen={showThumbnailPicker}
-            inputPath={filePath}
-            totalPages={totalPages}
-            onConfirm={(pages) => {
-              setRangeInput(rangesToString(pages));
-              setShowThumbnailPicker(false);
-              resetExtract();
-            }}
-            onClose={() => setShowThumbnailPicker(false)}
-          />
-        )}
+          {extractError && <ResultBanner type="error" message={t('extract.failed')} details={extractError} />}
+          {result && (
+            <ResultBanner
+              type="success"
+              message={t('extract.success')}
+              details={`${t('common.savedTo')} ${result.output_path} | ${t('extract.extracted')} ${result.pages_extracted} ${t('extract.pagesLower')}`}
+            />
+          )}
+        </div>
       </div>
+
+      {filePath && totalPages && (
+        <ThumbnailPickerModal
+          isOpen={showThumbnailPicker}
+          inputPath={filePath}
+          totalPages={totalPages}
+          onConfirm={(pages) => {
+            setRangeInput(rangesToString(pages));
+            setShowThumbnailPicker(false);
+            resetExtract();
+          }}
+          onClose={() => setShowThumbnailPicker(false)}
+        />
+      )}
     </div>
   );
 }

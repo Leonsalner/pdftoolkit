@@ -58,7 +58,6 @@ export function SignPage({ notify, isActive }: SignPageProps) {
     if (signMode === 'file' && (!certPath || !certPassword)) return;
     
     // In V2.0 prototype, we use the file-based command even for the eID flow structure
-    // as full eID logic is a massive R&D task.
     const res = await performSign(filePath, certPath, certPassword);
     if (res && !isActive) notify(t('sign.success'), 'sign');
   };
@@ -73,42 +72,46 @@ export function SignPage({ notify, isActive }: SignPageProps) {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('sign.title')}</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('sign.desc')}</p>
+    <div className="max-w-5xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-500 h-full overflow-y-auto">
+      <div className="mb-8 border-b border-[var(--border)] pb-6">
+        <h2 className="text-2xl font-semibold text-[var(--text-primary)]">{t('sign.title')}</h2>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">{t('sign.desc')}</p>
       </div>
 
-      <div className="space-y-8">
-        <div>
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('common.step1')}</h3>
-          {filePath ? (
-            <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800 flex justify-between items-center transition-all duration-300">
-              <span className="font-medium truncate">{fileName}</span>
-              <button onClick={handleStartOver} className="text-sm text-gray-500 hover:text-red-500 transition-colors">
-                {t('common.change')}
-              </button>
-            </div>
-          ) : (
-            <DropZone onFileSelect={handleFileSelect} />
-          )}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 xl:gap-12">
+        {/* Left Column: Input */}
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-sm font-medium text-[var(--text-primary)] mb-3">{t('common.step1')}</h3>
+            {filePath ? (
+              <div className="p-4 border border-[var(--border)] rounded-xl bg-[var(--bg-surface)] flex justify-between items-center transition-all duration-300 shadow-sm">
+                <span className="font-medium text-[var(--text-primary)] truncate pr-4">{fileName}</span>
+                <button onClick={handleStartOver} className="text-sm text-[var(--text-secondary)] hover:text-[var(--error)] flex-shrink-0 transition-colors">
+                  {t('common.change')}
+                </button>
+              </div>
+            ) : (
+              <DropZone onFileSelect={handleFileSelect} />
+            )}
+          </div>
         </div>
 
-        {filePath && (
-          <div className="animate-in fade-in slide-in-from-top-2 duration-300 space-y-6">
-            <div className="flex gap-4">
+        {/* Right Column: Sign Config */}
+        <div className={`space-y-8 transition-opacity duration-300 ${filePath ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+          <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl p-6 shadow-sm space-y-6">
+            <div className="flex bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg p-1">
               <button
                 onClick={() => setSignMode('file')}
-                className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium border transition-all ${
-                  signMode === 'file' ? 'bg-indigo-50 border-indigo-500 text-indigo-700 dark:bg-indigo-900/20' : 'bg-white border-gray-200 text-gray-600 dark:bg-gray-800 dark:border-gray-700'
+                className={`flex-1 py-1.5 px-3 text-sm font-medium rounded-md transition-colors ${
+                  signMode === 'file' ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm border border-[var(--border)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 {t('sign.modeFile')}
               </button>
               <button
                 onClick={() => setSignMode('eid')}
-                className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium border transition-all ${
-                  signMode === 'eid' ? 'bg-indigo-50 border-indigo-500 text-indigo-700 dark:bg-indigo-900/20' : 'bg-white border-gray-200 text-gray-600 dark:bg-gray-800 dark:border-gray-700'
+                className={`flex-1 py-1.5 px-3 text-sm font-medium rounded-md transition-colors ${
+                  signMode === 'eid' ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm border border-[var(--border)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 {t('sign.modeEid')}
@@ -118,84 +121,90 @@ export function SignPage({ notify, isActive }: SignPageProps) {
             {signMode === 'file' ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('sign.certFile')}</label>
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">{t('sign.certFile')}</label>
                   <div className="flex gap-2">
                     <input
                       type="text"
                       readOnly
                       value={certPath}
                       placeholder="/path/to/certificate.p12"
-                      className="flex-1 rounded-md border-gray-300 shadow-sm sm:text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white px-3 py-2 border"
+                      className="flex-1 rounded-md border-[var(--border)] bg-[var(--bg-elevated)] shadow-sm sm:text-sm px-3 py-2 border outline-none text-[var(--text-primary)] transition-colors"
                     />
                     <button
                       onClick={handleBrowseCert}
-                      className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors border border-gray-300 dark:border-gray-600"
+                      className="px-4 py-2 bg-[var(--bg-elevated)] text-sm font-medium rounded-md hover:bg-[var(--bg-surface)] transition-colors border border-[var(--border)] shadow-sm text-[var(--text-primary)]"
                     >
                       {t('settings.browse')}
                     </button>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('sign.certPassword')}</label>
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">{t('sign.certPassword')}</label>
                   <input
                     type="password"
                     value={certPassword}
                     onChange={(e) => setCertPassword(e.target.value)}
-                    className="block w-full rounded-md border-gray-300 shadow-sm sm:text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white px-3 py-2 border"
+                    className="block w-full rounded-md border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-sm focus:border-[var(--text-secondary)] focus:ring-1 focus:ring-[var(--text-secondary)] sm:text-sm px-3 py-2 outline-none transition-colors"
                   />
                 </div>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg">
-                  <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">{t('sign.eidRndDesc')}</p>
+                <div className="p-4 bg-[var(--cat-security-bg)] border border-[var(--cat-security)]/30 rounded-lg">
+                  <p className="text-xs text-[var(--cat-security)] leading-relaxed">{t('sign.eidRndDesc')}</p>
                 </div>
                 
                 <button
                   onClick={handleScanEid}
                   disabled={isScanning}
-                  className="w-full py-2 px-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-all flex items-center justify-center gap-2"
+                  className="w-full py-2.5 px-4 rounded-lg bg-[var(--bg-surface)] border border-[var(--border)] text-sm font-medium hover:bg-[var(--bg-elevated)] transition-all flex items-center justify-center gap-2 shadow-sm text-[var(--text-primary)]"
                 >
-                  {isScanning ? <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" /> : null}
+                  {isScanning ? <div className="w-4 h-4 border-2 border-[var(--text-primary)] border-t-transparent rounded-full animate-spin" /> : null}
                   {t('sign.detectEid')}
                 </button>
 
                 {readers.length > 0 ? (
                   <div className="space-y-2">
                     {readers.map((r, i) => (
-                      <div key={i} className="p-3 border rounded-lg flex items-center justify-between bg-gray-50 dark:bg-gray-900/50 dark:border-gray-700">
+                      <div key={i} className="p-3 border rounded-lg flex items-center justify-between bg-[var(--bg-elevated)] border-[var(--border)]">
                         <div>
-                          <p className="text-sm font-medium dark:text-gray-200">{t('sign.readerFound')} {r.name}</p>
-                          <p className={`text-xs ${r.present ? 'text-green-600' : 'text-gray-500'}`}>
+                          <p className="text-sm font-medium text-[var(--text-primary)]">{t('sign.readerFound')} {r.name}</p>
+                          <p className={`text-xs ${r.present ? 'text-[var(--success)]' : 'text-[var(--text-disabled)]'}`}>
                             {r.present ? t('sign.cardPresent') : t('sign.cardMissing')}
                           </p>
                         </div>
-                        {r.present && <div className="w-2 h-2 rounded-full bg-green-500" />}
+                        {r.present && <div className="w-2 h-2 rounded-full bg-[var(--success)]" />}
                       </div>
                     ))}
                   </div>
                 ) : (
-                  !isScanning && <p className="text-center text-sm text-gray-500">{t('sign.noReaders')}</p>
+                  !isScanning && <p className="text-center text-sm text-[var(--text-secondary)]">{t('sign.noReaders')}</p>
                 )}
               </div>
             )}
-
-            {!signResult ? (
-              <button
-                onClick={handleSign}
-                disabled={signLoading || (signMode === 'file' && (!certPath || !certPassword))}
-                className={`w-full py-3 px-4 rounded-lg text-white font-medium transition-all duration-300 ${
-                  signLoading || (signMode === 'file' && (!certPath || !certPassword)) ? 'bg-gray-400 cursor-not-allowed opacity-70' : 'bg-indigo-600 hover:bg-indigo-700'
-                }`}
-              >
-                {signLoading ? t('common.buttonLoading') : t('sign.button')}
-              </button>
-            ) : (
-              <ResultBanner type="success" message={t('sign.success')} details={`${t('common.savedTo')} ${signResult.output_path}`} />
-            )}
-            {signError && <ResultBanner type="error" message={t('sign.failed')} details={signError} />}
           </div>
-        )}
+
+          {!signResult ? (
+            <button
+              onClick={handleSign}
+              disabled={signLoading || (signMode === 'file' && (!certPath || !certPassword))}
+              className={`w-full py-3.5 px-4 rounded-xl font-semibold transition-all duration-300 shadow-sm ${
+                signLoading || (signMode === 'file' && (!certPath || !certPassword)) ? 'bg-[var(--bg-elevated)] text-[var(--text-disabled)] border border-[var(--border)] cursor-not-allowed' : 'bg-[var(--text-primary)] text-[var(--bg-base)] hover:bg-[var(--text-secondary)] active:scale-[0.99]'
+              }`}
+            >
+              {signLoading ? t('common.buttonLoading') : t('sign.button')}
+            </button>
+          ) : (
+            <button
+              onClick={handleStartOver}
+              className="w-full py-3.5 px-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-primary)] font-semibold hover:bg-[var(--bg-elevated)] transition-all duration-300 active:scale-[0.99] shadow-sm"
+            >
+              {t('extract.buttonAnother')}
+            </button>
+          )}
+          {signResult && <ResultBanner type="success" message={t('sign.success')} details={`${t('common.savedTo')} ${signResult.output_path}`} />}
+          {signError && <ResultBanner type="error" message={t('sign.failed')} details={signError} />}
+        </div>
       </div>
     </div>
   );

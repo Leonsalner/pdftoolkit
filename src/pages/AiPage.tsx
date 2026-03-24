@@ -4,13 +4,14 @@ import { getAiSpecs, checkModelExists, downloadModel, startAiServer, stopAiServe
 import { invoke } from '@tauri-apps/api/core';
 import { DropZone } from '../components/DropZone';
 import { Page } from '../components/Sidebar';
+import { Sparkles, Bot, User, HardDrive } from 'lucide-react';
 
 interface Message {
   role: 'system' | 'user' | 'assistant';
   content: string;
 }
 
-export function AiPage({ isActive }: { notify: (m: string, s: Page) => void; isActive: boolean }) {
+export function AiPage({}: { notify: (m: string, s: Page) => void; isActive: boolean }) {
   const { t } = useI18n();
   const [specs, setSpecs] = useState<SystemSpecs | null>(null);
   const [modelExists, setModelExists] = useState(false);
@@ -132,44 +133,43 @@ export function AiPage({ isActive }: { notify: (m: string, s: Page) => void; isA
     setIsTyping(false);
   };
 
-  if (!isActive && isServerRunning) {
-    // Optionally stop server when navigating away to save battery, 
-    // but for now we let it run until component unmounts.
-  }
-
   return (
     <div className="max-w-4xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-500 h-full flex flex-col">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-end mb-6 border-b border-[var(--border)] pb-6 flex-shrink-0">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('ai.title')}</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-normal">{t('ai.desc')}</p>
+          <h2 className="text-2xl font-semibold text-[var(--text-primary)]">{t('ai.title')}</h2>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">{t('ai.desc')}</p>
         </div>
         {isServerRunning && (
-          <button onClick={handleStop} className="text-sm px-3 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors">
+          <button 
+            onClick={handleStop} 
+            className="text-sm px-4 py-2 bg-[var(--error-bg)] text-[var(--error)] border border-[var(--error)] rounded-lg hover:opacity-80 transition-opacity font-medium"
+          >
             {t('ai.stop')}
           </button>
         )}
       </div>
 
       {!isServerRunning ? (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center space-y-6">
-          <div className="w-16 h-16 mx-auto bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
+        <div className="flex-1 flex flex-col items-center justify-center max-w-lg mx-auto w-full text-center space-y-8 animate-in fade-in duration-500">
+          <div className="w-20 h-20 bg-[var(--cat-intelligence-bg)] border border-[var(--cat-intelligence)]/30 rounded-full flex items-center justify-center shadow-sm">
+            <Sparkles className="w-10 h-10 text-[var(--cat-intelligence)]" />
           </div>
           
           <div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{t('ai.welcome')}</h3>
-            <p className="text-gray-500 dark:text-gray-400 max-w-lg mx-auto">
+            <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-3">{t('ai.welcome')}</h3>
+            <p className="text-[var(--text-secondary)] leading-relaxed">
               {t('ai.description')}
             </p>
           </div>
 
           {specs && (
-            <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 max-w-sm mx-auto border border-gray-200 dark:border-gray-700">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('ai.detectedRam')}: <span className="font-bold text-gray-900 dark:text-white">{specs.ram_gb} GB</span></p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{t('ai.recommendedModel')}: <span className="font-bold text-indigo-600 dark:text-indigo-400">{specs.recommended_model}</span></p>
+            <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl p-5 w-full shadow-sm text-left flex items-start gap-4">
+              <HardDrive className="text-[var(--text-secondary)] mt-0.5" size={20} />
+              <div>
+                <p className="text-sm text-[var(--text-secondary)] mb-1">{t('ai.detectedRam')}: <span className="font-bold text-[var(--text-primary)]">{specs.ram_gb} GB</span></p>
+                <p className="text-sm text-[var(--text-secondary)]">{t('ai.recommendedModel')}: <span className="font-mono text-xs bg-[var(--bg-elevated)] px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-primary)]">{specs.recommended_model}</span></p>
+              </div>
             </div>
           )}
 
@@ -177,41 +177,56 @@ export function AiPage({ isActive }: { notify: (m: string, s: Page) => void; isA
             <button
               onClick={handleDownload}
               disabled={isDownloading}
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+              className={`w-full py-4 px-6 rounded-xl font-semibold transition-all duration-300 shadow-sm flex justify-center items-center gap-2 ${
+                isDownloading
+                  ? 'bg-[var(--bg-elevated)] text-[var(--text-disabled)] border border-[var(--border)] cursor-not-allowed'
+                  : 'bg-[var(--text-primary)] text-[var(--bg-base)] hover:bg-[var(--text-secondary)] active:scale-[0.99]'
+              }`}
             >
               {isDownloading ? (
-                <>{t('ai.downloading')} <div className="ml-2 w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /></>
+                <>{t('ai.downloading')} <div className="ml-2 w-4 h-4 border-2 border-[var(--text-disabled)] border-t-transparent rounded-full animate-spin" /></>
               ) : t('ai.download')}
             </button>
           ) : (
             <button
               onClick={handleStart}
               disabled={isStarting}
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 transition-colors"
+              className={`w-full py-4 px-6 rounded-xl font-semibold transition-all duration-300 shadow-sm flex justify-center items-center gap-2 ${
+                isStarting
+                  ? 'bg-[var(--bg-elevated)] text-[var(--text-disabled)] border border-[var(--border)] cursor-not-allowed'
+                  : 'bg-[var(--success)] text-white hover:opacity-90 active:scale-[0.99]'
+              }`}
             >
-              {isStarting ? t('ai.starting') : t('ai.start')}
+              {isStarting ? (
+                <>{t('ai.starting')} <div className="ml-2 w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /></>
+              ) : t('ai.start')}
             </button>
           )}
         </div>
       ) : (
-        <div className="flex flex-col flex-1 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="flex flex-col flex-1 bg-[var(--bg-surface)] rounded-xl shadow-sm border border-[var(--border)] overflow-hidden min-h-0">
           {/* Chat header / Context area */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex flex-col gap-3">
+          <div className="p-4 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex flex-col gap-4 flex-shrink-0">
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('ai.chat')}</span>
+              <span className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2">
+                <Sparkles size={16} className="text-[var(--cat-intelligence)]" />
+                {t('ai.chat')}
+              </span>
               {contextText ? (
-                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full dark:bg-green-900/30 dark:text-green-400">
+                <span className="text-xs bg-[var(--success-bg)] text-[var(--success)] px-3 py-1 rounded-full font-medium border border-[var(--success)]">
                   {t('ai.contextLoaded')}
                 </span>
               ) : (
-                <span className="text-xs text-gray-500">{t('ai.noContext')}</span>
+                <span className="text-xs text-[var(--text-disabled)] font-medium bg-[var(--bg-surface)] px-3 py-1 rounded-full border border-[var(--border)]">
+                  {t('ai.noContext')}
+                </span>
               )}
             </div>
             {!contextText && (
-               <div className="h-20">
+               <div className="h-24">
                  {isExtracting ? (
-                    <div className="h-full flex items-center justify-center border-2 border-dashed rounded-lg border-gray-300 dark:border-gray-600">
-                      <span className="text-sm text-gray-500 animate-pulse">{t('ai.readingDoc')}</span>
+                    <div className="h-full flex items-center justify-center border border-dashed rounded-xl border-[var(--border)] bg-[var(--bg-surface)]">
+                      <span className="text-sm text-[var(--text-secondary)] animate-pulse">{t('ai.readingDoc')}</span>
                     </div>
                  ) : (
                     <DropZone onFileSelect={handleFileSelect} />
@@ -221,24 +236,36 @@ export function AiPage({ isActive }: { notify: (m: string, s: Page) => void; isA
           </div>
 
           {/* Messages area */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-4">
+          <div className="flex-1 p-6 overflow-y-auto space-y-6">
             {messages.filter(m => m.role !== 'system').map((msg, idx) => (
               <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                  msg.role === 'user' 
-                    ? 'bg-indigo-600 text-white rounded-br-none' 
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-bl-none'
-                }`}>
-                  <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                <div className={`max-w-[85%] flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    msg.role === 'user' ? 'bg-[var(--text-primary)] text-[var(--bg-base)]' : 'bg-[var(--cat-intelligence-bg)] text-[var(--cat-intelligence)]'
+                  }`}>
+                    {msg.role === 'user' ? <User size={16} /> : <Bot size={16} />}
+                  </div>
+                  <div className={`rounded-2xl px-5 py-3.5 text-sm leading-relaxed shadow-sm ${
+                    msg.role === 'user' 
+                      ? 'bg-[var(--text-primary)] text-[var(--bg-base)] rounded-tr-sm' 
+                      : 'bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text-primary)] rounded-tl-sm'
+                  }`}>
+                    {msg.content}
+                  </div>
                 </div>
               </div>
             ))}
             {isTyping && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 dark:bg-gray-700 rounded-2xl rounded-bl-none px-4 py-3 flex space-x-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
+                <div className="max-w-[85%] flex gap-3 flex-row">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-[var(--cat-intelligence-bg)] text-[var(--cat-intelligence)]">
+                    <Bot size={16} />
+                  </div>
+                  <div className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded-2xl rounded-tl-sm px-5 py-4 flex space-x-1.5 shadow-sm">
+                    <div className="w-2 h-2 bg-[var(--text-disabled)] rounded-full animate-bounce" />
+                    <div className="w-2 h-2 bg-[var(--text-disabled)] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                    <div className="w-2 h-2 bg-[var(--text-disabled)] rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
+                  </div>
                 </div>
               </div>
             )}
@@ -246,20 +273,20 @@ export function AiPage({ isActive }: { notify: (m: string, s: Page) => void; isA
           </div>
 
           {/* Input area */}
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-            <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="flex gap-2">
+          <div className="p-4 border-t border-[var(--border)] bg-[var(--bg-surface)] flex-shrink-0">
+            <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="flex gap-3">
               <input
                 type="text"
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 placeholder={t('ai.placeholder')}
                 disabled={isTyping}
-                className="flex-1 rounded-lg border-gray-300 dark:border-gray-600 shadow-sm sm:text-sm dark:bg-gray-700 dark:text-white px-4 py-3 focus:ring-indigo-500 focus:border-indigo-500"
+                className="flex-1 rounded-xl border-[var(--border)] shadow-sm sm:text-sm bg-[var(--bg-elevated)] text-[var(--text-primary)] px-4 py-3 focus:border-[var(--text-secondary)] focus:ring-1 focus:ring-[var(--text-secondary)] outline-none transition-colors"
               />
               <button
                 type="submit"
                 disabled={isTyping || !input.trim()}
-                className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                className="px-6 py-3 bg-[var(--text-primary)] text-[var(--bg-base)] font-semibold rounded-xl hover:bg-[var(--text-secondary)] disabled:opacity-50 transition-colors shadow-sm"
               >
                 {t('ai.send')}
               </button>

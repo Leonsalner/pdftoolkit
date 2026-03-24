@@ -42,7 +42,7 @@ pub async fn add_pdf_security(
     ];
 
     // User password (to open)
-    args.push(user_password.unwrap_or_default());
+    args.push(user_password.unwrap_or_else(|| "".to_string()));
     
     // Owner password (to change permissions)
     args.push(owner_password.unwrap_or_else(|| "owner".to_string()));

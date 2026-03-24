@@ -16,6 +16,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { ThumbnailMap } from '../hooks/useThumbnailLoader';
+import { RotateCcw, RotateCw, X, Undo2 } from 'lucide-react';
 
 export interface OrganizePage {
   pageNumber: number;
@@ -64,8 +65,8 @@ function SortableItem({ page, thumbnail, onRotate, onDelete, t }: SortableItemPr
     <div
       ref={setNodeRef}
       style={style}
-      className={`relative aspect-[3/4] rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 border-2 transition-colors ${
-        page.deleted ? 'border-red-400 dark:border-red-600' : 'border-gray-200 dark:border-gray-700'
+      className={`relative aspect-[3/4] rounded-lg overflow-hidden bg-[var(--bg-surface)] border-2 transition-colors ${
+        page.deleted ? 'border-[var(--error)]' : 'border-[var(--border)]'
       } ${isDragging ? 'z-50 shadow-xl' : ''}`}
     >
       <div
@@ -81,55 +82,60 @@ function SortableItem({ page, thumbnail, onRotate, onDelete, t }: SortableItemPr
             style={rotationStyle}
           />
         ) : (
-          <div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse flex items-center justify-center">
-            <span className="text-gray-400 text-sm">{page.pageNumber}</span>
+          <div className="w-full h-full bg-[var(--bg-elevated)] animate-pulse flex items-center justify-center">
+            <span className="text-[var(--text-disabled)] text-sm">{page.pageNumber}</span>
           </div>
         )}
       </div>
 
       {page.deleted && (
-        <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
-          <div className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded transform -rotate-12">
+        <div className="absolute inset-0 bg-[var(--bg-base)]/50 flex items-center justify-center">
+          <div className="text-[var(--error)] text-xs font-bold px-2 py-1 rounded transform -rotate-12 border border-[var(--error)] bg-[var(--error-bg)]">
             {t('organize.preview.deleted')}
           </div>
         </div>
       )}
 
-      <div className="absolute top-1 left-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
+      <div className="absolute top-1.5 left-1.5 bg-[var(--bg-surface)]/80 backdrop-blur-sm text-[var(--text-primary)] text-xs font-medium px-2 py-0.5 rounded-md border border-[var(--border)] shadow-sm">
         {page.pageNumber}
       </div>
 
       {!page.deleted && (
-        <div className="absolute bottom-1 right-1 flex gap-1">
+        <div className="absolute bottom-1.5 right-1.5 flex gap-1.5">
           <button
             onClick={(e) => {
               e.stopPropagation();
               onRotate('ccw');
             }}
-            className="w-7 h-7 rounded bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 flex items-center justify-center text-gray-700 dark:text-gray-300 shadow-sm transition-colors"
+            className="w-7 h-7 rounded-md bg-[var(--bg-surface)]/90 backdrop-blur-sm hover:bg-[var(--bg-elevated)] flex items-center justify-center text-[var(--text-secondary)] border border-[var(--border)] shadow-sm transition-colors"
             title={t('organize.rotateCCW')}
           >
-            ↺
+            <RotateCcw size={14} />
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onRotate('cw');
             }}
-            className="w-7 h-7 rounded bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 flex items-center justify-center text-gray-700 dark:text-gray-300 shadow-sm transition-colors"
+            className="w-7 h-7 rounded-md bg-[var(--bg-surface)]/90 backdrop-blur-sm hover:bg-[var(--bg-elevated)] flex items-center justify-center text-[var(--text-secondary)] border border-[var(--border)] shadow-sm transition-colors"
             title={t('organize.rotateCW')}
           >
-            ↻
+            <RotateCw size={14} />
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onDelete();
             }}
-            className="w-7 h-7 rounded bg-red-100 hover:bg-red-200 dark:bg-red-900/50 dark:hover:bg-red-800 flex items-center justify-center text-red-600 dark:text-red-400 shadow-sm transition-colors"
+            className="w-7 h-7 rounded-md flex items-center justify-center shadow-sm transition-colors border"
+            style={{ 
+              backgroundColor: 'var(--error-bg)', 
+              color: 'var(--error)',
+              borderColor: 'var(--error)' 
+            }}
             title={t('organize.deletePage')}
           >
-            ✕
+            <X size={14} />
           </button>
         </div>
       )}
@@ -140,9 +146,9 @@ function SortableItem({ page, thumbnail, onRotate, onDelete, t }: SortableItemPr
             e.stopPropagation();
             onDelete();
           }}
-          className="absolute top-1 right-1 w-6 h-6 rounded bg-gray-200/90 dark:bg-gray-700/90 hover:bg-gray-300 dark:hover:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-400 shadow-sm transition-colors text-xs"
+          className="absolute top-1.5 right-1.5 w-7 h-7 rounded-md bg-[var(--bg-surface)]/90 backdrop-blur-sm hover:bg-[var(--bg-elevated)] flex items-center justify-center text-[var(--text-primary)] border border-[var(--border)] shadow-sm transition-colors"
         >
-          ↩
+          <Undo2 size={14} />
         </button>
       )}
     </div>

@@ -148,106 +148,111 @@ export function OrganizePage({ gsAvailable, notify, isActive }: OrganizePageProp
   const visiblePages = pages.filter((p) => !p.deleted);
 
   return (
-    <div className="max-w-4xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('organize.title')}</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('organize.desc')}</p>
+    <div className="max-w-6xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-500 h-full flex flex-col">
+      <div className="mb-6 border-b border-[var(--border)] pb-6 flex justify-between items-end flex-shrink-0">
+        <div>
+          <h2 className="text-2xl font-semibold text-[var(--text-primary)]">{t('organize.title')}</h2>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">{t('organize.desc')}</p>
+        </div>
+        {inputPath && (
+          <div className="flex gap-3">
+            <button
+              onClick={handleStartOver}
+              className="px-4 py-2 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+            >
+              {t('common.change')}
+            </button>
+            <button
+              onClick={handleConfirmSave}
+              disabled={visiblePages.length === 0 || isSaving}
+              className={`py-2 px-6 rounded-lg font-semibold transition-all duration-300 shadow-sm text-sm ${
+                visiblePages.length === 0 || isSaving
+                  ? 'bg-[var(--bg-elevated)] text-[var(--text-disabled)] border border-[var(--border)] cursor-not-allowed'
+                  : 'bg-[var(--text-primary)] text-[var(--bg-base)] hover:bg-[var(--text-secondary)] active:scale-[0.99]'
+              }`}
+            >
+              {isSaving ? t('organize.saveLoading') : t('organize.save')}
+            </button>
+          </div>
+        )}
       </div>
 
       {!gsAvailable && (
-        <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-yellow-800 dark:text-yellow-200">
+        <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl text-amber-800 dark:text-amber-200 flex-shrink-0">
           <p className="font-semibold">{t('organize.gsWarning')}</p>
           <p className="text-sm mt-1">{t('organize.gsWarningDetail')}</p>
         </div>
       )}
 
-      <div className="space-y-8">
-        {!inputPath ? (
-          <div>
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              {t('common.step1')}
-            </h3>
-            <DropZone onFileSelect={handleFileSelect} />
+      {!inputPath ? (
+        <div className="flex-1">
+          <h3 className="text-sm font-medium text-[var(--text-primary)] mb-3">
+            {t('common.step1')}
+          </h3>
+          <DropZone onFileSelect={handleFileSelect} />
+        </div>
+      ) : (
+        <div className="flex-1 flex flex-col min-h-0 space-y-4">
+          <div className="flex justify-between items-center text-sm font-medium">
+            <span className="text-[var(--text-primary)] truncate max-w-xl">{fileName}</span>
+            <span className="text-[var(--text-secondary)] bg-[var(--bg-surface)] px-3 py-1 rounded-full border border-[var(--border)] shadow-sm">
+              {visiblePages.length} of {totalPages} pages
+            </span>
           </div>
-        ) : (
-          <>
-            <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800 flex justify-between items-center transition-all duration-300">
-              <div className="flex flex-col truncate mr-4">
-                <span className="font-medium truncate">{fileName}</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {t('organize.pageCount')}: {visiblePages.length} / {totalPages}
-                </span>
-              </div>
-              <button
-                onClick={handleStartOver}
-                className="text-sm text-gray-500 hover:text-red-500 flex-shrink-0 transition-colors"
-              >
-                {t('common.change')}
-              </button>
-            </div>
 
-            <div className="border rounded-lg bg-white dark:bg-gray-800 dark:border-gray-700 overflow-hidden">
-              <OrganizeGrid
-                pages={pages}
-                thumbnails={thumbnails}
-                onReorder={handleReorder}
-                onRotate={handleRotate}
-                onDelete={handleDelete}
-                t={t}
-              />
-            </div>
+          <div className="flex-1 border border-[var(--border)] rounded-xl bg-[var(--bg-surface)] shadow-sm overflow-y-auto">
+            <OrganizeGrid
+              pages={pages}
+              thumbnails={thumbnails}
+              onReorder={handleReorder}
+              onRotate={handleRotate}
+              onDelete={handleDelete}
+              t={t}
+            />
+          </div>
 
-            {error && (
-              <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm">
-                {error}
-              </div>
-            )}
-
+          <div className="flex justify-between items-center flex-shrink-0 pt-2">
             <div className="flex gap-4">
               {lastDeleted && (
                 <button
                   onClick={handleUndo}
                   disabled={isSaving}
-                  className="px-4 py-3 rounded-lg font-medium transition-all duration-300 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800 border border-amber-300 dark:border-amber-700"
+                  className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 bg-[var(--cat-security-bg)] text-[var(--cat-security)] hover:opacity-80 border border-[var(--cat-security)]/30"
                 >
-                  ↩ {t('organize.undoDelete')} ({t('organize.preview.page')} {lastDeleted.pageNumber})
+                  ↩ {t('organize.undoDelete')} (Page {lastDeleted.pageNumber})
                 </button>
               )}
-              <button
-                onClick={handlePreview}
-                disabled={pages.length === 0 || isSaving}
-                className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all duration-300 ${
-                  pages.length === 0 || isSaving
-                    ? 'bg-gray-400 cursor-not-allowed opacity-70'
-                    : 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                }`}
-              >
-                {t('organize.preview.title')}
-              </button>
-              <button
-                onClick={handleConfirmSave}
-                disabled={visiblePages.length === 0 || isSaving}
-                className={`flex-1 py-3 px-4 rounded-lg text-white font-medium transition-all duration-300 ${
-                  visiblePages.length === 0 || isSaving
-                    ? 'bg-gray-400 cursor-not-allowed opacity-70'
-                    : 'bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98]'
-                }`}
-              >
-                {isSaving ? t('organize.saveLoading') : t('organize.save')}
-              </button>
             </div>
+            
+            <button
+              onClick={handlePreview}
+              disabled={pages.length === 0 || isSaving}
+              className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 shadow-sm ${
+                pages.length === 0 || isSaving
+                  ? 'bg-[var(--bg-elevated)] text-[var(--text-disabled)] border border-[var(--border)] cursor-not-allowed'
+                  : 'bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
+              }`}
+            >
+              {t('organize.preview.title')}
+            </button>
+          </div>
 
-            <OrganizePreviewModal
-              isOpen={showPreview}
-              originalPageCount={totalPages}
-              currentPages={pages}
-              onConfirm={handleConfirmSave}
-              onClose={() => setShowPreview(false)}
-              t={t}
-            />
-          </>
-        )}
-      </div>
+          {error && (
+            <div className="p-4 bg-[var(--error-bg)] border border-[var(--error)] rounded-xl text-[var(--error)] text-sm shadow-sm flex-shrink-0">
+              {error}
+            </div>
+          )}
+
+          <OrganizePreviewModal
+            isOpen={showPreview}
+            originalPageCount={totalPages}
+            currentPages={pages}
+            onConfirm={handleConfirmSave}
+            onClose={() => setShowPreview(false)}
+            t={t}
+          />
+        </div>
+      )}
     </div>
   );
 }

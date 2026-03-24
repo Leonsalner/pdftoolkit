@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useFileDialog } from '../hooks/useFileDialog';
 import { useI18n } from '../lib/i18n';
 import { getCurrentWebview } from '@tauri-apps/api/webview';
+import { UploadCloud } from 'lucide-react';
 
 interface DropZoneProps {
   onFileSelect: (path: any, name: any) => void;
@@ -62,24 +63,26 @@ export function DropZone({ onFileSelect, multiple = false }: DropZoneProps) {
 
   return (
     <div
-      className={`relative border-2 border-dashed rounded-xl p-10 text-center transition-all duration-300 cursor-pointer ${
+      className={`relative border border-dashed rounded-xl p-10 text-center transition-all duration-300 cursor-pointer ${
         isHovered 
-          ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 scale-[1.01]' 
-          : 'border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'
+          ? 'border-[var(--text-secondary)] bg-[var(--bg-elevated)] scale-[1.01] shadow-sm' 
+          : 'border-[var(--border)] hover:border-[var(--border-hover)] bg-[var(--bg-surface)] hover:bg-[var(--bg-elevated)]'
       }`}
       onClick={handleBrowse}
     >
-      <div className="flex flex-col items-center justify-center space-y-3">
-        <svg className={`w-10 h-10 transition-colors duration-300 ${isHovered ? 'text-indigo-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-        </svg>
-        <div className="text-gray-600 dark:text-gray-400">
-          <span className={`font-semibold transition-colors duration-300 ${isHovered ? 'text-indigo-600 dark:text-indigo-300' : 'text-indigo-600 dark:text-indigo-400'}`}>
+      <div className="flex flex-col items-center justify-center space-y-4">
+        <UploadCloud 
+          size={40} 
+          strokeWidth={1.5} 
+          className={`transition-colors duration-300 ${isHovered ? 'text-[var(--text-primary)]' : 'text-[var(--text-disabled)]'}`} 
+        />
+        <div className="text-[var(--text-secondary)]">
+          <span className={`font-medium transition-colors duration-300 ${isHovered ? 'text-[var(--text-primary)]' : 'text-[var(--text-primary)]'}`}>
             {isHovered ? 'Drop to upload' : t('common.clickToBrowse')}
           </span>
           {!isHovered && <span className="ml-1">or drag and drop</span>}
         </div>
-        <p className="text-xs text-gray-500">{t('common.localFilesOnly')} (.pdf)</p>
+        <p className="text-xs text-[var(--text-disabled)]">{t('common.localFilesOnly')} (.pdf)</p>
       </div>
     </div>
   );

@@ -72,4 +72,4 @@ Before building or running the application, ensure you have the following instal
 
 ## Roadmap
 
-See [ROADMAP.md](./ROADMAP.md) for planned future features, including visual thumbnail picking, form extraction, and digital signatures.
+See [ROADMAP.md](./ROADMAP.md) for planned future features, including advanced batch processing, image stamping, and improved AI parsing.

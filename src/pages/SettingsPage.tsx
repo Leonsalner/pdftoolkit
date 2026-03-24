@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { open } from '@tauri-apps/plugin-dialog';
 import { useI18n } from '../lib/i18n';
 import { initStore } from '../lib/store';
+import { FolderOpen, Palette, Globe, HardDrive } from 'lucide-react';
 
 export function SettingsPage() {
   const { lang, setLang, t } = useI18n();
@@ -60,79 +61,125 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('settings.title')}</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('settings.desc')}</p>
+    <div className="max-w-3xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-500 h-full overflow-y-auto">
+      <div className="mb-10 border-b border-[var(--border)] pb-6">
+        <h2 className="text-2xl font-semibold text-[var(--text-primary)]">{t('settings.title')}</h2>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">{t('settings.desc')}</p>
       </div>
 
-      <div className="space-y-8">
-        <div>
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('settings.outputDir')}</h3>
-          <div className="flex items-center space-x-4 mb-3">
-            <input
-              type="text"
-              readOnly
-              value={outputDir}
-              placeholder={t('settings.outputDirDesc')}
-              disabled={askEveryTime}
-              className="flex-1 block w-full rounded-md border-gray-300 bg-gray-50 dark:bg-gray-800 shadow-sm sm:text-sm dark:border-gray-700 dark:text-white px-3 py-2 border placeholder-gray-400 disabled:opacity-50"
-            />
-            <button
-              onClick={handleSelectDir}
-              disabled={askEveryTime}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors"
-            >
-              {t('settings.browse')}
-            </button>
+      <div className="space-y-10">
+        {/* File Handling */}
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <HardDrive size={18} className="text-[var(--text-secondary)]" />
+            <h3 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wider">File Handling</h3>
           </div>
-          
-          <label className="flex items-center space-x-3 cursor-pointer">
-            <input 
-              type="checkbox" 
-              checked={askEveryTime} 
-              onChange={(e) => handleAskEveryTimeChange(e.target.checked)} 
-              className="text-indigo-600 focus:ring-indigo-500 rounded border-gray-300 h-4 w-4" 
-            />
-            <span className="text-gray-700 dark:text-gray-300 font-medium text-sm">{t('settings.askEveryTime')}</span>
-          </label>
-        </div>
+          <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-hidden shadow-sm">
+            <div className="p-5 border-b border-[var(--border)] flex justify-between items-center hover:bg-[var(--bg-elevated)] transition-colors">
+              <div className="pr-4">
+                <label className="text-sm font-medium text-[var(--text-primary)] block mb-1 cursor-pointer" htmlFor="ask-toggle">
+                  {t('settings.askEveryTime')}
+                </label>
+                <p className="text-xs text-[var(--text-secondary)]">Prompt for save location and filename for every operation.</p>
+              </div>
+              <input 
+                id="ask-toggle"
+                type="checkbox" 
+                checked={askEveryTime} 
+                onChange={(e) => handleAskEveryTimeChange(e.target.checked)} 
+                className="rounded border-[var(--border)] text-[var(--text-primary)] focus:ring-[var(--text-primary)] h-5 w-5 cursor-pointer bg-[var(--bg-surface)] transition-all" 
+              />
+            </div>
+            
+            <div className={`p-5 flex justify-between items-center transition-all ${askEveryTime ? 'opacity-50 pointer-events-none' : 'hover:bg-[var(--bg-elevated)]'}`}>
+              <div className="flex-1 pr-4">
+                <label className="text-sm font-medium text-[var(--text-primary)] block mb-1">
+                  {t('settings.outputDir')}
+                </label>
+                <p className="text-xs text-[var(--text-secondary)] truncate mb-2">{t('settings.outputDirDesc')}</p>
+                <div className="flex items-center space-x-2">
+                  <FolderOpen size={16} className="text-[var(--text-disabled)]" />
+                  <span className="text-sm text-[var(--text-primary)] font-mono bg-[var(--bg-base)] px-2 py-1 rounded border border-[var(--border)] truncate max-w-sm">
+                    {outputDir || 'Default Document Directory'}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={handleSelectDir}
+                disabled={askEveryTime}
+                className="px-4 py-2 border border-[var(--border)] rounded-lg shadow-sm text-sm font-medium text-[var(--text-primary)] bg-[var(--bg-surface)] hover:bg-[var(--bg-elevated)] transition-colors"
+              >
+                {t('settings.browse')}
+              </button>
+            </div>
+          </div>
+        </section>
 
-        <div>
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('settings.theme')}</h3>
-          <div className="space-y-3">
-            <label className="flex items-center space-x-3 cursor-pointer">
-              <input type="radio" value="system" checked={theme === 'system'} onChange={() => handleThemeChange('system')} className="text-indigo-600 focus:ring-indigo-500" />
-              <span className="text-gray-700 dark:text-gray-300 font-medium text-sm">{t('settings.theme.system')}</span>
-            </label>
-            <label className="flex items-center space-x-3 cursor-pointer">
-              <input type="radio" value="light" checked={theme === 'light'} onChange={() => handleThemeChange('light')} className="text-indigo-600 focus:ring-indigo-500" />
-              <span className="text-gray-700 dark:text-gray-300 font-medium text-sm">{t('settings.theme.light')}</span>
-            </label>
-            <label className="flex items-center space-x-3 cursor-pointer">
-              <input type="radio" value="dark" checked={theme === 'dark'} onChange={() => handleThemeChange('dark')} className="text-indigo-600 focus:ring-indigo-500" />
-              <span className="text-gray-700 dark:text-gray-300 font-medium text-sm">{t('settings.theme.dark')}</span>
-            </label>
+        {/* Appearance */}
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <Palette size={18} className="text-[var(--text-secondary)]" />
+            <h3 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wider">Appearance</h3>
           </div>
-        </div>
+          <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-hidden shadow-sm">
+            <div className="p-5 flex justify-between items-center hover:bg-[var(--bg-elevated)] transition-colors">
+              <div className="pr-4">
+                <label className="text-sm font-medium text-[var(--text-primary)] block mb-1">
+                  {t('settings.theme')}
+                </label>
+                <p className="text-xs text-[var(--text-secondary)]">Select your preferred color scheme.</p>
+              </div>
+              <div className="flex bg-[var(--bg-base)] border border-[var(--border)] rounded-lg p-1">
+                {(['system', 'light', 'dark'] as const).map((tOpt) => (
+                  <button
+                    key={tOpt}
+                    onClick={() => handleThemeChange(tOpt)}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                      theme === tOpt 
+                        ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm border border-[var(--border)]' 
+                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                    }`}
+                  >
+                    {t(`settings.theme.${tOpt}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
 
-        <div>
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('settings.language')}</h3>
-          <div className="space-y-3">
-            <label className="flex items-center space-x-3 cursor-pointer">
-              <input type="radio" value="en" checked={lang === 'en'} onChange={() => setLang('en')} className="text-indigo-600 focus:ring-indigo-500" />
-              <span className="text-gray-700 dark:text-gray-300 font-medium text-sm">{t('settings.language.en')}</span>
-            </label>
-            <label className="flex items-center space-x-3 cursor-pointer">
-              <input type="radio" value="sk" checked={lang === 'sk'} onChange={() => setLang('sk')} className="text-indigo-600 focus:ring-indigo-500" />
-              <span className="text-gray-700 dark:text-gray-300 font-medium text-sm">{t('settings.language.sk')}</span>
-            </label>
-            <label className="flex items-center space-x-3 cursor-pointer">
-              <input type="radio" value="cs" checked={lang === 'cs'} onChange={() => setLang('cs')} className="text-indigo-600 focus:ring-indigo-500" />
-              <span className="text-gray-700 dark:text-gray-300 font-medium text-sm">{t('settings.language.cs')}</span>
-            </label>
+        {/* Language */}
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <Globe size={18} className="text-[var(--text-secondary)]" />
+            <h3 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wider">Language</h3>
           </div>
-        </div>
+          <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-hidden shadow-sm">
+            <div className="p-5 flex justify-between items-center hover:bg-[var(--bg-elevated)] transition-colors">
+              <div className="pr-4">
+                <label className="text-sm font-medium text-[var(--text-primary)] block mb-1">
+                  {t('settings.language')}
+                </label>
+                <p className="text-xs text-[var(--text-secondary)]">Choose the application language.</p>
+              </div>
+              <div className="flex bg-[var(--bg-base)] border border-[var(--border)] rounded-lg p-1">
+                {(['en', 'sk', 'cs'] as const).map((lOpt) => (
+                  <button
+                    key={lOpt}
+                    onClick={() => setLang(lOpt)}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                      lang === lOpt 
+                        ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm border border-[var(--border)]' 
+                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                    }`}
+                  >
+                    {t(`settings.language.${lOpt}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );

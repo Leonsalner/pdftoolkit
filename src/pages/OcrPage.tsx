@@ -125,122 +125,119 @@ export function OcrPage({ notify, isActive }: OcrPageProps) {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('ocr.title')}</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('ocr.desc')}</p>
+    <div className="max-w-5xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-500 h-full overflow-y-auto">
+      <div className="mb-8 border-b border-[var(--border)] pb-6">
+        <h2 className="text-2xl font-semibold text-[var(--text-primary)]">{t('ocr.title')}</h2>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">{t('ocr.desc')}</p>
       </div>
 
-      <div className="space-y-8">
-        <div>
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-            {files.length === 0 ? t('common.step1') : t('common.step1.add')}
-          </h3>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 xl:gap-12">
+        {/* Left Column: File Selection */}
+        <div className="space-y-6">
+          <div className="flex justify-between items-end mb-3">
+            <h3 className="text-sm font-medium text-[var(--text-primary)]">
+              {files.length === 0 ? t('common.step1') : t('common.step1.add')}
+            </h3>
+            {files.length > 0 && (
+              <button
+                onClick={handleClearAll}
+                disabled={isProcessing}
+                className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+              >
+                {t('batch.clearAll')}
+              </button>
+            )}
+          </div>
+          
           <DropZone onFileSelect={handleFileSelect} multiple />
+          
+          {files.length > 0 && (
+            <div className="mt-6">
+              <BatchFileList
+                files={files}
+                onRemove={handleRemove}
+                onSaveText={ocrMode === 'extract' ? handleSaveText : undefined}
+                t={t}
+              />
+            </div>
+          )}
+
+          {files.length > 0 && (
+            <div className="text-sm text-[var(--text-disabled)] text-center pt-2">
+              {`${files.length} files | ${doneCount} done | ${errorCount} errors`}
+            </div>
+          )}
         </div>
 
-        {files.length > 0 && (
-          <div className="flex gap-2 mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
-            <button
-              onClick={() => setOcrMode('extract')}
-              className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
-                ocrMode === 'extract'
-                  ? 'bg-indigo-100 text-indigo-700 border-2 border-indigo-500 dark:bg-indigo-900/40 dark:text-indigo-300 dark:border-indigo-400'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700'
-              }`}
-            >
-              {t('ocr.modeExtract')}
-            </button>
-            <button
-              onClick={() => setOcrMode('searchable')}
-              className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
-                ocrMode === 'searchable'
-                  ? 'bg-indigo-100 text-indigo-700 border-2 border-indigo-500 dark:bg-indigo-900/40 dark:text-indigo-300 dark:border-indigo-400'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700'
-              }`}
-            >
-              {t('ocr.modeSearchable')}
-            </button>
+        {/* Right Column: Options & Processing */}
+        <div className={`space-y-8 transition-opacity duration-300 ${files.length > 0 ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+          <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl p-6 shadow-sm space-y-6">
+            <div>
+              <h3 className="text-sm font-medium text-[var(--text-primary)] mb-3">{t('ocr.modeTitle')}</h3>
+              <div className="flex bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg p-1">
+                <button
+                  onClick={() => setOcrMode('extract')}
+                  className={`flex-1 py-1.5 px-3 text-sm font-medium rounded-md transition-colors ${
+                    ocrMode === 'extract'
+                      ? 'bg-[var(--cat-intelligence-bg)] text-[var(--cat-intelligence)] shadow-sm border border-[var(--cat-intelligence)]/30'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  }`}
+                >
+                  {t('ocr.modeExtract')}
+                </button>
+                <button
+                  onClick={() => setOcrMode('searchable')}
+                  className={`flex-1 py-1.5 px-3 text-sm font-medium rounded-md transition-colors ${
+                    ocrMode === 'searchable'
+                      ? 'bg-[var(--cat-intelligence-bg)] text-[var(--cat-intelligence)] shadow-sm border border-[var(--cat-intelligence)]/30'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  }`}
+                >
+                  {t('ocr.modeSearchable')}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-medium text-[var(--text-primary)] mb-3">{t('ocr.language')}</h3>
+              <select
+                value={ocrLang}
+                onChange={(e) => setOcrLang(e.target.value)}
+                className="block w-full rounded-md border-[var(--border)] bg-[var(--bg-elevated)] shadow-sm focus:border-[var(--text-secondary)] focus:ring-1 focus:ring-[var(--text-secondary)] sm:text-sm text-[var(--text-primary)] px-3 py-2 border outline-none transition-colors"
+              >
+                <option value="eng">English</option>
+                <option value="slk">Slovak</option>
+                <option value="ces">Czech</option>
+              </select>
+            </div>
           </div>
-        )}
 
-        {files.length > 0 && (
-          <BatchFileList
-            files={files}
-            onRemove={handleRemove}
-            onSaveText={ocrMode === 'extract' ? handleSaveText : undefined}
-            t={t}
-          />
-        )}
+          <button
+            onClick={handleProcessAll}
+            disabled={pendingCount === 0 || isProcessing}
+            className={`w-full py-3.5 px-4 rounded-xl font-semibold transition-all duration-300 shadow-sm ${
+              pendingCount === 0 || isProcessing
+                ? 'bg-[var(--bg-elevated)] text-[var(--text-disabled)] border border-[var(--border)] cursor-not-allowed'
+                : 'bg-[var(--text-primary)] text-[var(--bg-base)] hover:bg-[var(--text-secondary)] active:scale-[0.99]'
+            }`}
+          >
+            {isProcessing ? t('batch.processing') : t('batch.processAll')}
+          </button>
 
-        {files.length > 0 && (
-          <div className="flex gap-4">
-            <button
-              onClick={handleClearAll}
-              disabled={isProcessing}
-              className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm"
-            >
-              {t('batch.clearAll')}
-            </button>
-          </div>
-        )}
+          {files.length > 0 && doneCount > 0 && (
+            <ResultBanner
+              type="success"
+              message={ocrMode === 'searchable' ? t('ocr.searchableSuccess') : t('ocr.success')}
+            />
+          )}
 
-        {files.length > 0 && (
-          <div>
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('ocr.language')}</h3>
-            <select
-              value={ocrLang}
-              onChange={(e) => setOcrLang(e.target.value)}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white px-3 py-2 border"
-            >
-              <option value="eng">English</option>
-              <option value="slk">Slovak</option>
-              <option value="ces">Czech</option>
-            </select>
-          </div>
-        )}
-
-        {files.length > 0 && (
-          <div className="flex gap-4">
-            <button
-              onClick={handleProcessAll}
-              disabled={pendingCount === 0 || isProcessing}
-              className={`flex-1 py-3 px-4 rounded-lg text-white font-medium transition-all duration-300 ${
-                pendingCount === 0 || isProcessing
-                  ? 'bg-gray-400 cursor-not-allowed opacity-70'
-                  : 'bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98]'
-              }`}
-            >
-              {isProcessing ? t('batch.processing') : t('batch.processAll')}
-            </button>
-          </div>
-        )}
-
-        {files.length > 0 && (
-          <div className="text-sm text-gray-500 dark:text-gray-400 text-center">
-            {`${files.length} files | ${doneCount} done | ${errorCount} errors`}
-          </div>
-        )}
-
-        {files.length === 0 && (
-          <div className="text-sm text-gray-500 dark:text-gray-400 text-center">
-            {t('batch.maxFiles')}
-          </div>
-        )}
-
-        {files.length > 0 && doneCount > 0 && (
-          <ResultBanner
-            type="success"
-            message={ocrMode === 'searchable' ? t('ocr.searchableSuccess') : t('ocr.success')}
-          />
-        )}
-
-        {files.length > 0 && errorCount > 0 && (
-          <ResultBanner
-            type="error"
-            message={ocrMode === 'searchable' ? t('ocr.searchableFailed') : t('ocr.failed')}
-          />
-        )}
+          {files.length > 0 && errorCount > 0 && (
+            <ResultBanner
+              type="error"
+              message={ocrMode === 'searchable' ? t('ocr.searchableFailed') : t('ocr.failed')}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

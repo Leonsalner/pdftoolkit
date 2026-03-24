@@ -1,4 +1,11 @@
 import { useI18n } from '../lib/i18n';
+import { 
+  Minimize2, FileOutput, Combine, Scissors, LayoutGrid,
+  Repeat, Stamp, Tags,
+  Lock, PenTool,
+  Sparkles, ScanText,
+  Settings
+} from 'lucide-react';
 
 export type Page = 'compress' | 'extract' | 'merge' | 'split' | 'convert' | 'watermark' | 'security' | 'sign' | 'ai' | 'ocr' | 'organize' | 'metadata' | 'settings';
 
@@ -7,61 +14,128 @@ interface SidebarProps {
   onNavigate: (page: Page) => void;
 }
 
+interface NavSection {
+  title: string;
+  categoryVar: string;
+  items: { id: Page; labelKey: string; icon: React.ElementType }[];
+}
+
 export function Sidebar({ activePage, onNavigate }: SidebarProps) {
   const { t } = useI18n();
 
-  const navItems = [
-    { id: 'compress' as Page, label: t('nav.compress') },
-    { id: 'extract' as Page, label: t('nav.extract') },
-    { id: 'merge' as Page, label: t('nav.merge') },
-    { id: 'split' as Page, label: t('nav.split') },
-    { id: 'convert' as Page, label: t('nav.convert') },
-    { id: 'watermark' as Page, label: t('nav.watermark') },
-    { id: 'security' as Page, label: t('nav.security') },
-    { id: 'sign' as Page, label: t('nav.sign') },
-    { id: 'ai' as Page, label: t('nav.ai') },
-    { id: 'ocr' as Page, label: t('nav.ocr') },
-    { id: 'organize' as Page, label: t('nav.organize') },
-    { id: 'metadata' as Page, label: t('nav.metadata') },
+  const sections: NavSection[] = [
+    {
+      title: "Documents",
+      categoryVar: "--cat-documents",
+      items: [
+        { id: 'extract', labelKey: 'nav.extract', icon: FileOutput },
+        { id: 'compress', labelKey: 'nav.compress', icon: Minimize2 },
+        { id: 'merge', labelKey: 'nav.merge', icon: Combine },
+        { id: 'split', labelKey: 'nav.split', icon: Scissors },
+        { id: 'organize', labelKey: 'nav.organize', icon: LayoutGrid },
+      ]
+    },
+    {
+      title: "Content",
+      categoryVar: "--cat-content",
+      items: [
+        { id: 'convert', labelKey: 'nav.convert', icon: Repeat },
+        { id: 'watermark', labelKey: 'nav.watermark', icon: Stamp },
+        { id: 'metadata', labelKey: 'nav.metadata', icon: Tags },
+      ]
+    },
+    {
+      title: "Security & Sign",
+      categoryVar: "--cat-security",
+      items: [
+        { id: 'security', labelKey: 'nav.security', icon: Lock },
+        { id: 'sign', labelKey: 'nav.sign', icon: PenTool },
+      ]
+    },
+    {
+      title: "Intelligence",
+      categoryVar: "--cat-intelligence",
+      items: [
+        { id: 'ai', labelKey: 'nav.ai', icon: Sparkles },
+        { id: 'ocr', labelKey: 'nav.ocr', icon: ScanText },
+      ]
+    }
   ];
 
   return (
-    <div className="w-64 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 h-full flex flex-col transition-colors duration-300">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-800 transition-colors duration-300">
-        <h1 className="text-lg font-bold text-gray-900 dark:text-white flex items-baseline space-x-2 transition-colors duration-300">
+    <div className="w-64 bg-[var(--bg-surface)] border-r border-[var(--border)] h-full flex flex-col transition-colors duration-300">
+      <div className="p-4 border-b border-[var(--border)] transition-colors duration-300">
+        <h1 className="text-lg font-bold text-[var(--text-primary)] flex items-baseline space-x-2">
           <span>{t('app.title')}</span>
-          <span className="text-[10px] font-normal text-gray-400 dark:text-gray-500 uppercase tracking-wider">v2.0</span>
+          <span className="text-[10px] font-normal text-[var(--text-disabled)] uppercase tracking-wider">v2.0</span>
         </h1>
       </div>
-      <nav className="flex-1 p-4 space-y-1">
-        {navItems.map((item) => {
-          const isActive = activePage === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => onNavigate(item.id)}
-              className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
-                isActive
-                  ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 scale-100'
-                  : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 hover:scale-[1.02]'
-              }`}
-            >
-              {item.label}
-            </button>
-          );
-        })}
+      
+      <nav className="flex-1 p-3 space-y-6 overflow-y-auto overflow-x-hidden">
+        {sections.map((section) => (
+          <div key={section.title}>
+            <h2 className="px-3 mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-disabled)]">
+              {section.title}
+            </h2>
+            <div className="space-y-0.5">
+              {section.items.map((item) => {
+                const isActive = activePage === item.id;
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => onNavigate(item.id)}
+                    className="w-full flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                    style={{
+                      backgroundColor: isActive ? `var(${section.categoryVar}-bg)` : 'transparent',
+                      color: isActive ? `var(${section.categoryVar})` : 'var(--text-secondary)',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.backgroundColor = 'var(--bg-elevated)';
+                        e.currentTarget.style.color = 'var(--text-primary)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = 'var(--text-secondary)';
+                      }
+                    }}
+                  >
+                    <Icon size={16} strokeWidth={2.5} className="flex-shrink-0" />
+                    <span>{t(item.labelKey)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
       
-      <div className="p-4 border-t border-gray-200 dark:border-gray-800 transition-colors duration-300">
+      <div className="p-3 border-t border-[var(--border)] transition-colors duration-300">
         <button
           onClick={() => onNavigate('settings')}
-          className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
-            activePage === 'settings'
-              ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 scale-100'
-              : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 hover:scale-[1.02]'
-          }`}
+          className="w-full flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+          style={{
+            backgroundColor: activePage === 'settings' ? 'var(--cat-global-bg)' : 'transparent',
+            color: activePage === 'settings' ? 'var(--cat-global)' : 'var(--text-secondary)',
+          }}
+          onMouseEnter={(e) => {
+            if (activePage !== 'settings') {
+              e.currentTarget.style.backgroundColor = 'var(--bg-elevated)';
+              e.currentTarget.style.color = 'var(--text-primary)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (activePage !== 'settings') {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = 'var(--text-secondary)';
+            }
+          }}
         >
-          {t('nav.settings')}
+          <Settings size={16} strokeWidth={2.5} className="flex-shrink-0" />
+          <span>{t('nav.settings')}</span>
         </button>
       </div>
     </div>

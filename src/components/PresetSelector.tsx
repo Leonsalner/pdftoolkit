@@ -24,7 +24,7 @@ export function PresetSelector({ value, onChange, fileSize }: PresetSelectorProp
 
   return (
     <div className="flex flex-col space-y-3">
-      <div className="inline-flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 overflow-x-auto w-full relative">
+      <div className="inline-flex bg-[var(--bg-surface)] border border-[var(--border)] rounded-lg p-1 overflow-x-auto w-full relative">
         {PRESETS.map((preset) => {
           const isActive = value === preset.value;
           return (
@@ -33,12 +33,12 @@ export function PresetSelector({ value, onChange, fileSize }: PresetSelectorProp
               onClick={() => onChange(preset.value)}
               className={`flex-1 min-w-[100px] px-2 py-2 text-sm font-medium rounded-md transition-all duration-300 relative z-10 ${
                 isActive
-                  ? 'text-indigo-600 dark:text-indigo-400'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  ? 'text-[var(--text-primary)]'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
             >
               {isActive && (
-                <span className="absolute inset-0 bg-white dark:bg-gray-700 shadow-sm rounded-md -z-10" />
+                <span className="absolute inset-0 bg-[var(--bg-elevated)] shadow-sm rounded-md border border-[var(--border)] -z-10" />
               )}
               {preset.label}
             </button>
@@ -47,9 +47,9 @@ export function PresetSelector({ value, onChange, fileSize }: PresetSelectorProp
       </div>
       
       <div className="flex justify-between items-start text-sm transition-all duration-300">
-        <p className="text-gray-500 dark:text-gray-400">{activePreset.desc}</p>
+        <p className="text-[var(--text-secondary)]">{activePreset.desc}</p>
         {estimatedSize && (
-          <p className="font-medium text-indigo-600 dark:text-indigo-400 whitespace-nowrap ml-4">
+          <p className="font-medium text-[var(--text-primary)] whitespace-nowrap ml-4">
             {t('preset.estSize')}: ~{estimatedSize} MB
           </p>
         )}

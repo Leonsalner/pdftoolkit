@@ -49,7 +49,7 @@ pub async fn check_model_exists(app: AppHandle, model_name: String) -> Result<bo
 #[tauri::command]
 pub async fn download_model(app: AppHandle, url: String, model_name: String) -> Result<String, String> {
     let app_dir = app.path().app_data_dir().unwrap_or_else(|_| std::path::PathBuf::from("/tmp"));
-    std::fs::create_dir_all(&app_dir).unwrap_or_default();
+    std::fs::create_dir_all(&app_dir).map_err(|e| format!("Failed to create app data directory: {}", e))?;
     
     let model_path = app_dir.join(&model_name);
     if model_path.exists() {
@@ -78,7 +78,7 @@ pub async fn start_ai_server(app: AppHandle, state: State<'_, AiState>, model_na
         return Err("Model not found".into());
     }
 
-    let mut process_guard = state.server_process.lock().unwrap();
+    let mut process_guard = state.server_process.lock().map_err(|e| format!("Mutex lock failed: {}", e))?;
     if let Some(child) = process_guard.take() {
         let _ = child.kill();
     }
@@ -105,7 +105,7 @@ pub async fn start_ai_server(app: AppHandle, state: State<'_, AiState>, model_na
 
 #[tauri::command]
 pub async fn stop_ai_server(state: State<'_, AiState>) -> Result<(), String> {
-    let mut process_guard = state.server_process.lock().unwrap();
+    let mut process_guard = state.server_process.lock().map_err(|e| format!("Mutex lock failed: {}", e))?;
     if let Some(child) = process_guard.take() {
         let _ = child.kill();
     }
