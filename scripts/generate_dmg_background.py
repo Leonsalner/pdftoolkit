@@ -1,48 +1,55 @@
 #!/usr/bin/env python3
 """
-Generates a premium DMG background image for PDF Toolkit.
+Generates a DMG background image for PDF Toolkit.
 Run: python3 scripts/generate_dmg_background.py
 Output: src-tauri/icons/dmg-background.png
+
+Layout:
+  - Title above the icons
+  - macOS places icons at y=155
+  - Compact instructions below icons
+  - Everything fits within 660x400
 """
 
 from PIL import Image, ImageDraw, ImageFont
-import os, sys
+import os
 
-# --- Layout constants ---
-W, H = 660, 400
-APP_X, APP_Y = 160, 155      # center of app icon drop zone
-APPS_X, APPS_Y = 500, 155    # center of Applications alias drop zone
-ARROW_Y = 155
-OUT = os.path.join(os.path.dirname(__file__), "../src-tauri/icons/dmg-background.png")
+# --- Dimensions (macOS default DMG size) ---
+SCALE = 3
+LW, LH = 660, 400
+W, H = LW * SCALE, LH * SCALE  # 1980 x 1200
+
+# Icon centers (match tauri.conf.json x SCALE)
+APP_CX  = 190 * SCALE
+APPS_CX = 470 * SCALE
+ICON_CY = 155 * SCALE
+
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                   "..", "src-tauri", "icons", "dmg-background.png")
 
 # --- Colors ---
-BG          = (15,  17,  23)   # #0f1117 — matches app dark base
-SURFACE     = (26,  29,  39)   # #1a1d27
-BORDER      = (45,  49,  66)   # subtle border
-TEXT_PRI    = (243, 244, 246)  # #f3f4f6
-TEXT_SEC    = (156, 163, 175)  # #9ca3af
-TEXT_MUTED  = (107, 114, 128)  # #6b7280
-ACCENT      = (129, 140, 248)  # #818cf8 — indigo
-ARROW_COL   = (99,  102, 241)  # #6366f1
+BG         = (246, 247, 249)
+TEXT_DARK  = (40,  42,  48)
+TEXT_MED   = (90,  95,  108)
+TEXT_LIGHT = (150, 155, 165)
+ARROW_COL  = (180, 185, 195)
+
 
 def load_font(size, bold=False):
-    """Try Inter, then system fonts, then PIL default."""
-    candidates = []
-    if bold:
-        candidates += [
-            "/Library/Fonts/Inter-Bold.ttf",
-            "/Library/Fonts/Inter/Inter-Bold.ttf",
-            "/System/Library/Fonts/SFProDisplay-Bold.otf",
-            "/System/Library/Fonts/Helvetica.ttc",
-        ]
-    else:
-        candidates += [
-            "/Library/Fonts/Inter-Regular.ttf",
-            "/Library/Fonts/Inter/Inter-Regular.ttf",
-            "/System/Library/Fonts/SFProDisplay-Regular.otf",
-            "/System/Library/Fonts/Helvetica.ttc",
-        ]
-    for path in candidates:
+    size = int(size * SCALE)
+    paths_bold = [
+        "/System/Library/Fonts/SFProText-Semibold.otf",
+        "/System/Library/Fonts/SFProDisplay-Semibold.otf",
+        "/Library/Fonts/Inter-SemiBold.ttf",
+        "/System/Library/Fonts/Helvetica.ttc",
+    ]
+    paths_regular = [
+        "/System/Library/Fonts/SFProText-Regular.otf",
+        "/System/Library/Fonts/SFProDisplay-Regular.otf",
+        "/Library/Fonts/Inter-Regular.ttf",
+        "/System/Library/Fonts/Helvetica.ttc",
+    ]
+    for path in (paths_bold if bold else paths_regular):
         if os.path.exists(path):
             try:
                 return ImageFont.truetype(path, size)
@@ -50,85 +57,61 @@ def load_font(size, bold=False):
                 continue
     return ImageFont.load_default()
 
-def draw_rounded_rect(draw, xy, radius, fill=None, outline=None, width=1):
-    x0, y0, x1, y1 = xy
-    draw.rounded_rectangle([x0, y0, x1, y1], radius=radius, fill=fill, outline=outline, width=width)
 
-def draw_arrow(draw, x1, y1, x2, y2, color, thickness=2):
-    """Draw a horizontal arrow with a clean arrowhead."""
-    # shaft
-    draw.line([(x1, y1), (x2 - 12, y2)], fill=color, width=thickness)
-    # arrowhead
-    draw.polygon([
-        (x2, y2),
-        (x2 - 14, y2 - 7),
-        (x2 - 14, y2 + 7),
-    ], fill=color)
-
-img = Image.new("RGBA", (W, H), BG)
+# --- Canvas ---
+img = Image.new("RGB", (W, H), BG)
 draw = ImageDraw.Draw(img)
 
-# --- Title bar area ---
-draw_rounded_rect(draw, (30, 18, W - 30, 60), radius=8,
-                  fill=SURFACE, outline=BORDER, width=1)
-title_font = load_font(15, bold=True)
-draw.text((W // 2, 39), "PDF Toolkit", font=title_font, fill=TEXT_PRI, anchor="mm")
+# --- Arrow between icon positions ---
+arrow_y = ICON_CY
+x1 = APP_CX + 60 * SCALE
+x2 = APPS_CX - 60 * SCALE
+draw.line([(x1, arrow_y), (x2 - 8 * SCALE, arrow_y)],
+          fill=ARROW_COL, width=2 * SCALE)
+chev = 7 * SCALE
+draw.polygon([
+    (x2, arrow_y),
+    (x2 - chev, arrow_y - chev // 2),
+    (x2 - chev, arrow_y + chev // 2),
+], fill=ARROW_COL)
 
+# --- Fonts ---
+f_head = load_font(13, bold=True)
+f_body = load_font(10.5)
+f_dim  = load_font(9.5)
 
-# --- Arrow between zones ---
-zone_r = 52
-arrow_x1 = APP_X + zone_r + 12
-arrow_x2 = APPS_X - zone_r - 12
-draw_arrow(draw, arrow_x1, ARROW_Y, arrow_x2, ARROW_Y, ARROW_COL, thickness=2)
+cx = W // 2
 
-# --- Divider ---
-div_y = 240
-draw.line([(40, div_y), (W - 40, div_y)], fill=BORDER, width=1)
+# --- Title ABOVE the icons ---
+# macOS icons sit at y~155, icon artwork starts at ~y=110
+# Icon labels ("PDF Toolkit", "Applications") are at ~y=210
+# Title goes at y=55, safely above the icon artwork
+draw.text((cx, int(55 * SCALE)),
+          "Drag PDF Toolkit into Applications to install.",
+          font=f_head, fill=TEXT_DARK, anchor="mt")
 
-# --- Instructions ---
-head_font   = load_font(11, bold=True)
-body_font   = load_font(10)
-muted_font  = load_font(9)
+# --- Instructions BELOW the icons ---
+# Icon labels end at roughly y=225, start text at y=245
+line_h = int(16 * SCALE)
+y = int(248 * SCALE)
 
-# English
-en_lines = [
-    ("Drag PDF Toolkit into the Applications folder to install.", head_font, TEXT_PRI),
-    ("First launch — if macOS blocks the app:", body_font, TEXT_SEC),
-    ("  1. Right-click the app icon → Open", body_font, TEXT_SEC),
-    ("  2. Or: System Settings → Privacy & Security → scroll down → Open Anyway", body_font, TEXT_SEC),
-]
+draw.text((cx, y), "If macOS blocks the app on first launch:",
+          font=f_body, fill=TEXT_MED, anchor="mt")
+y += line_h
+draw.text((cx, y), "Right-click the app -> Open -> Open",
+          font=f_body, fill=TEXT_MED, anchor="mt")
+y += line_h
+draw.text((cx, y), "or  System Settings -> Privacy & Security -> scroll down -> Open Anyway",
+          font=f_body, fill=TEXT_MED, anchor="mt")
 
-# Slovak
-sk_lines = [
-    ("Nainštalujte presunutím ikony PDF Toolkit do priečinka Applications.", head_font, TEXT_PRI),
-    ("Prvé spustenie — ak macOS zablokuje aplikáciu:", body_font, TEXT_SEC),
-    ("  1. Kliknite pravým tlačidlom → Otvoriť", body_font, TEXT_SEC),
-    ("  2. Alebo: Nastavenia systému → Súkromie → posúňte nadol → Otvoriť tak či onak", body_font, TEXT_SEC),
-]
-
-# Two columns
-col1_x = 50
-col2_x = W // 2 + 10
-y_start = div_y + 16
-line_gap = 14
-
-for col_x, lines in [(col1_x, en_lines), (col2_x, sk_lines)]:
-    y = y_start
-    for text, font, color in lines:
-        draw.text((col_x, y), text, font=font, fill=color)
-        y += line_gap
-
-# Column labels
-lang_font = load_font(9, bold=True)
-draw.text((col1_x, div_y + 4), "EN", font=lang_font, fill=ACCENT)
-draw.text((col2_x, div_y + 4), "SK", font=lang_font, fill=ACCENT)
-
-# --- Bottom version note ---
-ver_font = load_font(9)
-draw.text((W // 2, H - 14), "PDF Toolkit v2.0 — standalone, no additional setup required",
-          font=ver_font, fill=TEXT_MUTED, anchor="mm")
+# --- Bottom tagline ---
+draw.text((cx, H - int(12 * SCALE)),
+          "Standalone - no additional software required",
+          font=f_dim, fill=TEXT_LIGHT, anchor="mb")
 
 # --- Save ---
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
-img.convert("RGB").save(OUT, "PNG")
-print(f"✓ Saved: {OUT}  ({W}x{H}px)")
+img.save(OUT, "PNG", dpi=(216, 216))
+
+print(f"Saved: {OUT}")
+print(f"  Pixels: {W}x{H}  DPI: 216  Logical: {LW}x{LH}")
