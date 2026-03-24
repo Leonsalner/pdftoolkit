@@ -101,6 +101,7 @@ export function OcrPage({ notify, isActive }: OcrPageProps) {
             >
               <option value="eng">English</option>
               <option value="slk">Slovak</option>
+              <option value="ces">Czech</option>
             </select>
           </div>
         )}

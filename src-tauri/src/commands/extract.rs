@@ -1,6 +1,7 @@
 use serde::Serialize;
 use lopdf::Document;
 use crate::utils::paths::{get_output_dir, output_filename};
+use crate::utils::validation::validate_pdf;
 
 #[derive(Serialize)]
 pub struct ExtractResult {
@@ -10,12 +11,16 @@ pub struct ExtractResult {
 
 #[tauri::command]
 pub async fn get_pdf_page_count(input_path: String) -> Result<u32, String> {
+    // Audit: Validate input PDF
+    validate_pdf(&input_path)?;
     let doc = Document::load(&input_path).map_err(|e| format!("Failed to read PDF: {}", e))?;
     Ok(doc.get_pages().len() as u32)
 }
 
 #[tauri::command]
 pub async fn extract_pages(app: tauri::AppHandle, input_path: String, ranges: String, output_name: Option<String>, absolute_output_path: Option<String>) -> Result<ExtractResult, String> {
+    // Audit: Validate input PDF
+    validate_pdf(&input_path)?;
     let mut doc = Document::load(&input_path).map_err(|e| format!("Failed to read PDF: {}", e))?;
     let total_pages = doc.get_pages().len() as u32;
 
@@ -57,16 +62,7 @@ pub async fn extract_pages(app: tauri::AppHandle, input_path: String, ranges: St
     }
 
     let doc_pages = doc.get_pages();
-    let mut page_object_ids = Vec::new();
     
-    for p in &pages_to_keep {
-        if let Some(obj_id) = doc_pages.get(p) {
-            page_object_ids.push(*obj_id);
-        }
-    }
-    
-    // lopdf handles page deletion if we just keep the ones we need, or we can filter.
-    // However, it's easier to use the filter method if available, or delete what we don't want.
     let mut pages_to_delete = Vec::new();
     for (page_num, _) in doc_pages.iter() {
         if !pages_to_keep.contains(page_num) {
@@ -96,6 +92,11 @@ pub async fn extract_pages(app: tauri::AppHandle, input_path: String, ranges: St
         out_dir.join(file_name)
     };
     
+    // Audit: Check if output file already exists
+    if output_path.exists() {
+        return Err("Output file already exists. Please choose a different name or location.".to_string());
+    }
+
     let output_str = output_path.to_string_lossy().to_string();
 
     doc.save(&output_path).map_err(|e| format!("Failed to write output: {}", e))?;

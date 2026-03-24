@@ -1,6 +1,7 @@
 use serde::Serialize;
 use lopdf::Document;
 use crate::utils::paths::get_output_dir;
+use crate::utils::validation::validate_pdf;
 use std::path::Path;
 
 #[derive(Serialize)]
@@ -11,6 +12,8 @@ pub struct SplitResult {
 
 #[tauri::command]
 pub async fn split_pdf(app: tauri::AppHandle, input_path: String, mode: String, value: String, output_prefix: Option<String>, absolute_output_dir: Option<String>) -> Result<SplitResult, String> {
+    // Audit: Validate input PDF
+    validate_pdf(&input_path)?;
     let doc = Document::load(&input_path).map_err(|e| format!("Failed to read PDF: {}", e))?;
     let total_pages = doc.get_pages().len() as u32;
 
@@ -100,7 +103,13 @@ pub async fn split_pdf(app: tauri::AppHandle, input_path: String, mode: String, 
         new_doc.delete_pages(&pages_to_delete);
         
         let file_name = format!("{}_part{}.pdf", base_name, i + 1);
-        let output_path = out_dir.join(file_name);
+        let output_path = out_dir.join(&file_name);
+        
+        // Audit: Check if output file already exists
+        if output_path.exists() {
+            return Err(format!("Output file '{}' already exists. Please choose a different prefix or location.", file_name));
+        }
+
         let output_str = output_path.to_string_lossy().to_string();
         
         new_doc.save(&output_path).map_err(|e| format!("Failed to write output: {}", e))?;

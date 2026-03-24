@@ -124,6 +124,10 @@ export function SettingsPage() {
               <input type="radio" value="sk" checked={lang === 'sk'} onChange={() => setLang('sk')} className="text-indigo-600 focus:ring-indigo-500" />
               <span className="text-gray-700 dark:text-gray-300 font-medium text-sm">{t('settings.language.sk')}</span>
             </label>
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input type="radio" value="cs" checked={lang === 'cs'} onChange={() => setLang('cs')} className="text-indigo-600 focus:ring-indigo-500" />
+              <span className="text-gray-700 dark:text-gray-300 font-medium text-sm">{t('settings.language.cs')}</span>
+            </label>
           </div>
         </div>
       </div>

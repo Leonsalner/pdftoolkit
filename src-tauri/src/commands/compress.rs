@@ -1,8 +1,8 @@
 use std::fs;
-use std::path::Path;
 use serde::Serialize;
 use tauri_plugin_shell::ShellExt;
 use crate::utils::paths::{get_output_dir, output_filename};
+use crate::utils::validation::validate_pdf;
 
 #[derive(Serialize)]
 pub struct CompressResult {
@@ -13,9 +13,8 @@ pub struct CompressResult {
 
 #[tauri::command]
 pub async fn compress_pdf(app: tauri::AppHandle, input_path: String, preset: String, output_name: Option<String>, absolute_output_path: Option<String>) -> Result<CompressResult, String> {
-    if !Path::new(&input_path).exists() {
-        return Err(format!("File not found: {}", input_path));
-    }
+    // Audit: Validate input PDF
+    validate_pdf(&input_path)?;
 
     let valid_presets = ["screen", "ebook", "printer", "prepress"];
     if !valid_presets.contains(&preset.as_str()) {
@@ -39,6 +38,11 @@ pub async fn compress_pdf(app: tauri::AppHandle, input_path: String, preset: Str
         out_dir.join(file_name)
     };
     
+    // Audit: Check if output file already exists
+    if output_path.exists() {
+        return Err("Output file already exists. Please choose a different name or location.".to_string());
+    }
+
     let output_str = output_path.to_string_lossy().to_string();
 
     let original_size = fs::metadata(&input_path)
@@ -59,15 +63,15 @@ pub async fn compress_pdf(app: tauri::AppHandle, input_path: String, preset: Str
         ])
         .output()
         .await
-        .map_err(|e| format!("Failed to execute Ghostscript sidecar: {}", e))?;
+        .map_err(|e| format!("Failed to execute Ghostscript: {}", e))?;
 
     if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("Compression failed: {}", stderr));
+        // Audit: Sanitize error
+        return Err("Compression failed. The document might be corrupted or protected.".to_string());
     }
 
     let compressed_size = fs::metadata(&output_path)
-        .map_err(|e| format!("Failed to write output: {}", e))?
+        .map_err(|e| format!("Failed to read compressed file size: {}", e))?
         .len();
 
     Ok(CompressResult {

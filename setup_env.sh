@@ -79,4 +79,11 @@ if [ ! -f "$SLK_DATA_PATH" ]; then
     curl -sL "https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/main/slk.traineddata" -o "$SLK_DATA_PATH"
 fi
 
+# 9. Download Czech trained data if missing
+CES_DATA_PATH="src-tauri/tessdata/ces.traineddata"
+if [ ! -f "$CES_DATA_PATH" ]; then
+    echo "Downloading Czech Tesseract data..."
+    curl -sL "https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/main/ces.traineddata" -o "$CES_DATA_PATH"
+fi
+
 echo "Setup complete! Ghostscript and Tesseract are now bundled as sidecars."

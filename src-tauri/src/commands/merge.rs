@@ -1,7 +1,7 @@
-use std::path::Path;
 use serde::Serialize;
 use tauri_plugin_shell::ShellExt;
 use crate::utils::paths::{get_output_dir, output_filename};
+use crate::utils::validation::validate_pdf;
 
 #[derive(Serialize)]
 pub struct MergeResult {
@@ -16,9 +16,8 @@ pub async fn merge_pdfs(app: tauri::AppHandle, file_paths: Vec<String>, output_n
     }
 
     for path in &file_paths {
-        if !Path::new(path).exists() {
-            return Err(format!("File not found: {}", path));
-        }
+        // Audit: Validate each input PDF
+        validate_pdf(path)?;
     }
 
     let output_path = if let Some(abs_path) = absolute_output_path {
@@ -37,6 +36,11 @@ pub async fn merge_pdfs(app: tauri::AppHandle, file_paths: Vec<String>, output_n
         };
         out_dir.join(file_name)
     };
+
+    // Audit: Check if output file already exists
+    if output_path.exists() {
+        return Err("Output file already exists. Please choose a different name or location.".to_string());
+    }
 
     let output_str = output_path.to_string_lossy().to_string();
 
@@ -57,11 +61,11 @@ pub async fn merge_pdfs(app: tauri::AppHandle, file_paths: Vec<String>, output_n
         .args(args)
         .output()
         .await
-        .map_err(|e| format!("Failed to execute Ghostscript sidecar: {}", e))?;
+        .map_err(|e| format!("Failed to execute Ghostscript: {}", e))?;
 
     if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("Merge failed: {}", stderr));
+        // Audit: Sanitize error
+        return Err("Merge failed. One or more documents might be corrupted or protected.".to_string());
     }
 
     Ok(MergeResult {
