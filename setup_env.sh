@@ -4,9 +4,24 @@ set -e
 
 echo "Setting up local environment and sidecars for Tauri PDF Toolkit..."
 
+# 0. Check for Homebrew (macOS)
+if [[ "$OSTYPE" == "darwin"* ]] && ! command -v brew >/dev/null 2>&1; then
+    echo "Homebrew not found! Attempting to install..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+fi
+
 # 1. Check for basic requirements
-command -v npm >/dev/null 2>&1 || { echo >&2 "npm is required but it's not installed. Aborting."; exit 1; }
-command -v rustc >/dev/null 2>&1 || { echo >&2 "rustc is required but it's not installed. Aborting."; exit 1; }
+if ! command -v npm >/dev/null 2>&1; then
+    echo "npm not found! Attempting to install Node.js via Homebrew..."
+    command -v brew >/dev/null 2>&1 || { echo >&2 "brew is required to install node. Aborting."; exit 1; }
+    brew install node
+fi
+
+if ! command -v rustc >/dev/null 2>&1; then
+    echo "rustc not found! Attempting to install Rust via rustup..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    source "$HOME/.cargo/env"
+fi
 
 # 2. Check for gs and tesseract
 if ! command -v gs >/dev/null 2>&1; then

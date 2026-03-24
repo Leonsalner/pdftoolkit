@@ -11,8 +11,8 @@ export function PresetSelector({ value, onChange, fileSize }: PresetSelectorProp
   const { t } = useI18n();
 
   const PRESETS: { value: Preset; label: string; factor: number; desc: string }[] = [
-    { value: 'screen', label: t('preset.low'), factor: 0.15, desc: t('preset.low.desc') },
-    { value: 'ebook', label: t('preset.medium'), factor: 0.35, desc: t('preset.medium.desc') },
+    { value: 'screen', label: t('preset.low'), factor: 0.20, desc: t('preset.low.desc') },
+    { value: 'ebook', label: t('preset.medium'), factor: 0.45, desc: t('preset.medium.desc') },
     { value: 'printer', label: t('preset.high'), factor: 0.75, desc: t('preset.high.desc') },
   ];
 

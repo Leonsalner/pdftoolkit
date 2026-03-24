@@ -17,11 +17,6 @@ pub async fn split_pdf(app: tauri::AppHandle, input_path: String, mode: String, 
     let mut chunks: Vec<Vec<u32>> = Vec::new();
 
     match mode.as_str() {
-        "single" => {
-            for i in 1..=total_pages {
-                chunks.push(vec![i]);
-            }
-        }
         "every_n" => {
             let n = value.parse::<u32>().map_err(|_| "Invalid chunk size".to_string())?;
             if n < 1 {
@@ -38,22 +33,6 @@ pub async fn split_pdf(app: tauri::AppHandle, input_path: String, mode: String, 
             if !current_chunk.is_empty() {
                 chunks.push(current_chunk);
             }
-        }
-        "after_page" => {
-            let p = value.parse::<u32>().map_err(|_| "Invalid page number".to_string())?;
-            if p < 1 || p >= total_pages {
-                return Err("Page number must be between 1 and total pages - 1".to_string());
-            }
-            let mut part1 = Vec::new();
-            let mut part2 = Vec::new();
-            for i in 1..=p {
-                part1.push(i);
-            }
-            for i in (p + 1)..=total_pages {
-                part2.push(i);
-            }
-            chunks.push(part1);
-            chunks.push(part2);
         }
         "ranges" => {
             let parts = value.split(',');
