@@ -21,8 +21,9 @@ export function Sidebar({ activePage, onNavigate }: SidebarProps) {
   return (
     <div className="w-64 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 h-full flex flex-col transition-colors duration-300">
       <div className="p-4 border-b border-gray-200 dark:border-gray-800 transition-colors duration-300">
-        <h1 className="text-lg font-bold text-gray-900 dark:text-white flex items-center space-x-2 transition-colors duration-300">
+        <h1 className="text-lg font-bold text-gray-900 dark:text-white flex items-baseline space-x-2 transition-colors duration-300">
           <span>{t('app.title')}</span>
+          <span className="text-[10px] font-normal text-gray-400 dark:text-gray-500 uppercase tracking-wider">v1.0</span>
         </h1>
       </div>
       <nav className="flex-1 p-4 space-y-1">
