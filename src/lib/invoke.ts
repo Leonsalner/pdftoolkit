@@ -23,17 +23,17 @@ export interface SplitResult {
 
 export type Preset = 'screen' | 'ebook' | 'printer' | 'prepress';
 
-export const compressPdf = (inputPath: string, preset: Preset, outputName?: string) =>
-  invoke<CompressResult>('compress_pdf', { inputPath, preset, outputName });
+export const compressPdf = (inputPath: string, preset: Preset, outputName?: string, absoluteOutputPath?: string) =>
+  invoke<CompressResult>('compress_pdf', { inputPath, preset, outputName, absoluteOutputPath });
 
-export const extractPages = (inputPath: string, ranges: string, outputName?: string) =>
-  invoke<ExtractResult>('extract_pages', { inputPath, ranges, outputName });
+export const extractPages = (inputPath: string, ranges: string, outputName?: string, absoluteOutputPath?: string) =>
+  invoke<ExtractResult>('extract_pages', { inputPath, ranges, outputName, absoluteOutputPath });
 
-export const mergePdfs = (filePaths: string[], outputName?: string) =>
-  invoke<MergeResult>('merge_pdfs', { filePaths, outputName });
+export const mergePdfs = (filePaths: string[], outputName?: string, absoluteOutputPath?: string) =>
+  invoke<MergeResult>('merge_pdfs', { filePaths, outputName, absoluteOutputPath });
 
-export const splitPdf = (inputPath: string, mode: string, value: string, outputPrefix?: string) =>
-  invoke<SplitResult>('split_pdf', { inputPath, mode, value, outputPrefix });
+export const splitPdf = (inputPath: string, mode: string, value: string, outputPrefix?: string, absoluteOutputDir?: string) =>
+  invoke<SplitResult>('split_pdf', { inputPath, mode, value, outputPrefix, absoluteOutputDir });
 
 export const getPdfPageCount = (inputPath: string) =>
   invoke<number>('get_pdf_page_count', { inputPath });

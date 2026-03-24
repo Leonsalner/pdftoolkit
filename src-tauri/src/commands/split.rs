@@ -10,7 +10,7 @@ pub struct SplitResult {
 }
 
 #[tauri::command]
-pub async fn split_pdf(app: tauri::AppHandle, input_path: String, mode: String, value: String, output_prefix: Option<String>) -> Result<SplitResult, String> {
+pub async fn split_pdf(app: tauri::AppHandle, input_path: String, mode: String, value: String, output_prefix: Option<String>, absolute_output_dir: Option<String>) -> Result<SplitResult, String> {
     let doc = Document::load(&input_path).map_err(|e| format!("Failed to read PDF: {}", e))?;
     let total_pages = doc.get_pages().len() as u32;
 
@@ -91,7 +91,11 @@ pub async fn split_pdf(app: tauri::AppHandle, input_path: String, mode: String, 
         return Err("No chunks to split into".to_string());
     }
 
-    let out_dir = get_output_dir(&app)?;
+    let out_dir = if let Some(abs_dir) = absolute_output_dir {
+        std::path::PathBuf::from(abs_dir)
+    } else {
+        get_output_dir(&app)?
+    };
     
     let base_name = match output_prefix {
         Some(name) if !name.trim().is_empty() => name,

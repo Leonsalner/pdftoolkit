@@ -15,7 +15,7 @@ pub async fn get_pdf_page_count(input_path: String) -> Result<u32, String> {
 }
 
 #[tauri::command]
-pub async fn extract_pages(app: tauri::AppHandle, input_path: String, ranges: String, output_name: Option<String>) -> Result<ExtractResult, String> {
+pub async fn extract_pages(app: tauri::AppHandle, input_path: String, ranges: String, output_name: Option<String>, absolute_output_path: Option<String>) -> Result<ExtractResult, String> {
     let mut doc = Document::load(&input_path).map_err(|e| format!("Failed to read PDF: {}", e))?;
     let total_pages = doc.get_pages().len() as u32;
 
@@ -76,23 +76,26 @@ pub async fn extract_pages(app: tauri::AppHandle, input_path: String, ranges: St
     
     doc.delete_pages(&pages_to_delete);
 
-    let out_dir = get_output_dir(&app)?;
-    
-    let file_name = match output_name {
-        Some(name) if !name.trim().is_empty() => {
-            if name.to_lowercase().ends_with(".pdf") {
-                name
-            } else {
-                format!("{}.pdf", name)
+    let output_path = if let Some(abs_path) = absolute_output_path {
+        std::path::PathBuf::from(abs_path)
+    } else {
+        let out_dir = get_output_dir(&app)?;
+        let file_name = match output_name {
+            Some(name) if !name.trim().is_empty() => {
+                if name.to_lowercase().ends_with(".pdf") {
+                    name
+                } else {
+                    format!("{}.pdf", name)
+                }
             }
-        }
-        _ => {
-            let sanitized_ranges = ranges.replace(',', "_").replace(' ', "");
-            output_filename(&input_path, &sanitized_ranges)
-        }
+            _ => {
+                let sanitized_ranges = ranges.replace(',', "_").replace(' ', "");
+                output_filename(&input_path, &sanitized_ranges)
+            }
+        };
+        out_dir.join(file_name)
     };
     
-    let output_path = out_dir.join(file_name);
     let output_str = output_path.to_string_lossy().to_string();
 
     doc.save(&output_path).map_err(|e| format!("Failed to write output: {}", e))?;

@@ -12,7 +12,7 @@ pub struct CompressResult {
 }
 
 #[tauri::command]
-pub async fn compress_pdf(app: tauri::AppHandle, input_path: String, preset: String, output_name: Option<String>) -> Result<CompressResult, String> {
+pub async fn compress_pdf(app: tauri::AppHandle, input_path: String, preset: String, output_name: Option<String>, absolute_output_path: Option<String>) -> Result<CompressResult, String> {
     if !Path::new(&input_path).exists() {
         return Err(format!("File not found: {}", input_path));
     }
@@ -22,19 +22,23 @@ pub async fn compress_pdf(app: tauri::AppHandle, input_path: String, preset: Str
         return Err(format!("Invalid preset: {}. Use screen, ebook, printer, or prepress", preset));
     }
 
-    let out_dir = get_output_dir(&app)?;
-    let file_name = match output_name {
-        Some(name) if !name.trim().is_empty() => {
-            if name.to_lowercase().ends_with(".pdf") {
-                name
-            } else {
-                format!("{}.pdf", name)
+    let output_path = if let Some(abs_path) = absolute_output_path {
+        std::path::PathBuf::from(abs_path)
+    } else {
+        let out_dir = get_output_dir(&app)?;
+        let file_name = match output_name {
+            Some(name) if !name.trim().is_empty() => {
+                if name.to_lowercase().ends_with(".pdf") {
+                    name
+                } else {
+                    format!("{}.pdf", name)
+                }
             }
-        }
-        _ => output_filename(&input_path, "compressed"),
+            _ => output_filename(&input_path, "compressed"),
+        };
+        out_dir.join(file_name)
     };
     
-    let output_path = out_dir.join(file_name);
     let output_str = output_path.to_string_lossy().to_string();
 
     let original_size = fs::metadata(&input_path)

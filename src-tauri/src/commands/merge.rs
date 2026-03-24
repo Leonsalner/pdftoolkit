@@ -10,7 +10,7 @@ pub struct MergeResult {
 }
 
 #[tauri::command]
-pub async fn merge_pdfs(app: tauri::AppHandle, file_paths: Vec<String>, output_name: Option<String>) -> Result<MergeResult, String> {
+pub async fn merge_pdfs(app: tauri::AppHandle, file_paths: Vec<String>, output_name: Option<String>, absolute_output_path: Option<String>) -> Result<MergeResult, String> {
     if file_paths.is_empty() {
         return Err("No files provided for merging".to_string());
     }
@@ -21,19 +21,23 @@ pub async fn merge_pdfs(app: tauri::AppHandle, file_paths: Vec<String>, output_n
         }
     }
 
-    let out_dir = get_output_dir(&app)?;
-    let file_name = match output_name {
-        Some(name) if !name.trim().is_empty() => {
-            if name.to_lowercase().ends_with(".pdf") {
-                name
-            } else {
-                format!("{}.pdf", name)
+    let output_path = if let Some(abs_path) = absolute_output_path {
+        std::path::PathBuf::from(abs_path)
+    } else {
+        let out_dir = get_output_dir(&app)?;
+        let file_name = match output_name {
+            Some(name) if !name.trim().is_empty() => {
+                if name.to_lowercase().ends_with(".pdf") {
+                    name
+                } else {
+                    format!("{}.pdf", name)
+                }
             }
-        }
-        _ => output_filename(&file_paths[0], "merged"),
+            _ => output_filename(&file_paths[0], "merged"),
+        };
+        out_dir.join(file_name)
     };
 
-    let output_path = out_dir.join(file_name);
     let output_str = output_path.to_string_lossy().to_string();
 
     let mut args = vec![

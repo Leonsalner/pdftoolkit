@@ -3,18 +3,22 @@ import { DropZone } from '../components/DropZone';
 import { ResultBanner } from '../components/ResultBanner';
 import { useTauriCommand } from '../hooks/useTauriCommand';
 import { invoke } from '@tauri-apps/api/core';
+import { useI18n } from '../lib/i18n';
+import { writeTextFile } from '@tauri-apps/plugin-fs';
+import { save } from '@tauri-apps/plugin-dialog';
 
 export interface OcrResult {
-  output_path: string;
+  text: string;
 }
 
-const extractTextOcr = (inputPath: string, outputName?: string) =>
-  invoke<OcrResult>('extract_text_ocr', { inputPath, outputName });
+const extractTextOcr = (inputPath: string, lang: string) =>
+  invoke<OcrResult>('extract_text_ocr', { inputPath, lang });
 
 export function OcrPage() {
+  const { t } = useI18n();
   const [filePath, setFilePath] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
-  const [customFileName, setCustomFileName] = useState('');
+  const [ocrLang, setOcrLang] = useState('eng');
 
   const { execute, result, error, loading, reset } = useTauriCommand(extractTextOcr);
 
@@ -23,46 +27,54 @@ export function OcrPage() {
     const n = Array.isArray(name) ? name[0] : name;
     setFilePath(p);
     setFileName(n);
-    setCustomFileName('');
     reset();
   };
 
   const handleExtract = () => {
     if (filePath) {
-      execute(filePath, customFileName);
+      execute(filePath, ocrLang);
     }
   };
 
   const handleStartOver = () => {
     setFilePath(null);
     setFileName(null);
-    setCustomFileName('');
     reset();
   };
 
-  const defaultOutputName = fileName ? fileName.replace(/\.pdf$/i, '_ocr') : '';
+  const handleSaveText = async () => {
+    if (!result || !result.text) return;
+    
+    try {
+      const defaultName = fileName ? fileName.replace(/\.pdf$/i, '_ocr.txt') : 'extracted_ocr.txt';
+      const savePath = await save({
+        defaultPath: defaultName,
+        filters: [{ name: 'Text', extensions: ['txt'] }]
+      });
+
+      if (savePath) {
+        await writeTextFile(savePath, result.text);
+      }
+    } catch (err) {
+      console.error('Failed to save file', err);
+    }
+  };
 
   return (
-    <div className="max-w-3xl mx-auto p-8">
-      <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Local OCR Text Extraction</h2>
-
-      <div className="mb-6 p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg text-indigo-800 dark:text-indigo-200">
-        <p className="text-sm">
-          <strong>100% Offline:</strong> This process converts the PDF to images and uses the bundled Tesseract OCR engine to read text without internet access. This may take several minutes for larger documents.
-        </p>
-      </div>
+    <div className="max-w-3xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">{t('ocr.title')}</h2>
 
       <div className="space-y-8">
         <div>
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">1. Select File</h3>
+          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('common.step1')}</h3>
           {filePath ? (
-            <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800 flex justify-between items-center">
+            <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800 flex justify-between items-center transition-all duration-300">
               <span className="font-medium truncate">{fileName}</span>
               <button
                 onClick={handleStartOver}
-                className="text-sm text-gray-500 hover:text-red-500"
+                className="text-sm text-gray-500 hover:text-red-500 transition-colors"
               >
-                Change
+                {t('common.change')}
               </button>
             </div>
           ) : (
@@ -71,15 +83,16 @@ export function OcrPage() {
         </div>
 
         {filePath && (
-          <div>
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">2. Output Renaming (Optional)</h3>
-            <input
-              type="text"
-              value={customFileName}
-              onChange={(e) => setCustomFileName(e.target.value)}
-              placeholder={`${defaultOutputName}.txt`}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white px-3 py-2 border placeholder-gray-400 dark:placeholder-gray-500"
-            />
+          <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('ocr.language')}</h3>
+            <select
+              value={ocrLang}
+              onChange={(e) => setOcrLang(e.target.value)}
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white px-3 py-2 border"
+            >
+              <option value="eng">English</option>
+              <option value="slk">Slovak</option>
+            </select>
           </div>
         )}
 
@@ -88,34 +101,52 @@ export function OcrPage() {
             <button
               onClick={handleExtract}
               disabled={!filePath || loading}
-              className={`w-full py-3 px-4 rounded-lg text-white font-medium transition-colors ${
+              className={`w-full py-3 px-4 rounded-lg text-white font-medium transition-all duration-300 ${
                 !filePath || loading
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-indigo-600 hover:bg-indigo-700'
+                  ? 'bg-gray-400 cursor-not-allowed opacity-70'
+                  : 'bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98]'
               }`}
             >
-              {loading ? 'Processing... (This may take a while)' : 'Extract Text'}
+              {loading ? t('ocr.buttonLoading') : t('ocr.button')}
             </button>
           </div>
         ) : (
-          <div>
-            <button
-              onClick={handleStartOver}
-              className="w-full py-3 px-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-            >
-              Process Another PDF
-            </button>
+          <div className="space-y-4 animate-in fade-in zoom-in-95 duration-500">
+            <ResultBanner
+              type="success"
+              message={t('ocr.success')}
+            />
+            
+            <details className="group border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800">
+              <summary className="px-4 py-3 bg-gray-50 dark:bg-gray-800/50 cursor-pointer font-medium text-gray-700 dark:text-gray-200 select-none flex justify-between items-center transition-colors hover:bg-gray-100 dark:hover:bg-gray-700/50">
+                {t('ocr.textPreview')}
+                <span className="transform group-open:rotate-180 transition-transform duration-300">▼</span>
+              </summary>
+              <div className="p-4 bg-white dark:bg-[#0f1117] max-h-96 overflow-y-auto">
+                <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 font-sans">
+                  {result.text}
+                </pre>
+              </div>
+            </details>
+
+            <div className="flex gap-4">
+              <button
+                onClick={handleSaveText}
+                className="flex-1 py-3 px-4 rounded-lg text-white font-medium transition-all duration-300 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] shadow-sm"
+              >
+                {t('ocr.saveText')}
+              </button>
+              <button
+                onClick={handleStartOver}
+                className="flex-1 py-3 px-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 active:scale-[0.98]"
+              >
+                {t('ocr.buttonAnother')}
+              </button>
+            </div>
           </div>
         )}
 
-        {error && <ResultBanner type="error" message="OCR Extraction failed" details={error} />}
-        {result && (
-          <ResultBanner
-            type="success"
-            message="OCR Extraction successful!"
-            details={`Text saved to: ${result.output_path}`}
-          />
-        )}
+        {error && <ResultBanner type="error" message={t('ocr.failed')} details={error} />}
       </div>
     </div>
   );

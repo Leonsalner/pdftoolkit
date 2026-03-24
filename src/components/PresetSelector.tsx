@@ -1,4 +1,5 @@
 import { Preset } from '../lib/invoke';
+import { useI18n } from '../lib/i18n';
 
 interface PresetSelectorProps {
   value: Preset;
@@ -6,13 +7,15 @@ interface PresetSelectorProps {
   fileSize: number | null;
 }
 
-const PRESETS: { value: Preset; label: string; factor: number; desc: string }[] = [
-  { value: 'screen', label: 'Low', factor: 0.15, desc: 'Best for web & email. Lowest resolution.' },
-  { value: 'ebook', label: 'Medium', factor: 0.35, desc: 'Good balance of size and quality.' },
-  { value: 'printer', label: 'High', factor: 0.75, desc: 'High resolution for home/office printing.' },
-];
-
 export function PresetSelector({ value, onChange, fileSize }: PresetSelectorProps) {
+  const { t } = useI18n();
+
+  const PRESETS: { value: Preset; label: string; factor: number; desc: string }[] = [
+    { value: 'screen', label: t('preset.low'), factor: 0.15, desc: t('preset.low.desc') },
+    { value: 'ebook', label: t('preset.medium'), factor: 0.35, desc: t('preset.medium.desc') },
+    { value: 'printer', label: t('preset.high'), factor: 0.75, desc: t('preset.high.desc') },
+  ];
+
   const activePreset = PRESETS.find(p => p.value === value) || PRESETS[1];
   
   const estimatedSize = fileSize 
@@ -21,30 +24,33 @@ export function PresetSelector({ value, onChange, fileSize }: PresetSelectorProp
 
   return (
     <div className="flex flex-col space-y-3">
-      <div className="inline-flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 overflow-x-auto w-full">
+      <div className="inline-flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 overflow-x-auto w-full relative">
         {PRESETS.map((preset) => {
           const isActive = value === preset.value;
           return (
             <button
               key={preset.value}
               onClick={() => onChange(preset.value)}
-              className={`flex-1 min-w-[100px] px-2 py-2 text-sm font-medium rounded-md transition-colors ${
+              className={`flex-1 min-w-[100px] px-2 py-2 text-sm font-medium rounded-md transition-all duration-300 relative z-10 ${
                 isActive
-                  ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                  ? 'text-indigo-600 dark:text-indigo-400'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
               }`}
             >
+              {isActive && (
+                <span className="absolute inset-0 bg-white dark:bg-gray-700 shadow-sm rounded-md -z-10" />
+              )}
               {preset.label}
             </button>
           );
         })}
       </div>
       
-      <div className="flex justify-between items-start text-sm">
+      <div className="flex justify-between items-start text-sm transition-all duration-300">
         <p className="text-gray-500 dark:text-gray-400">{activePreset.desc}</p>
         {estimatedSize && (
-          <p className="font-medium text-indigo-600 dark:text-indigo-400">
-            Est. Size: ~{estimatedSize} MB
+          <p className="font-medium text-indigo-600 dark:text-indigo-400 whitespace-nowrap ml-4">
+            {t('preset.estSize')}: ~{estimatedSize} MB
           </p>
         )}
       </div>

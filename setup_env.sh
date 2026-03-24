@@ -57,4 +57,11 @@ else
     echo "Warning: Non-homebrew installations need manual tessdata copying."
 fi
 
+# 8. Download Slovak trained data if missing
+SLK_DATA_PATH="src-tauri/tessdata/slk.traineddata"
+if [ ! -f "$SLK_DATA_PATH" ]; then
+    echo "Downloading Slovak Tesseract data..."
+    curl -sL "https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/main/slk.traineddata" -o "$SLK_DATA_PATH"
+fi
+
 echo "Setup complete! Ghostscript and Tesseract are now bundled as sidecars."

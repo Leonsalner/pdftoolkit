@@ -4,16 +4,9 @@ import { CompressPage } from "./pages/CompressPage";
 import { ExtractPage } from "./pages/ExtractPage";
 import { MergePage } from "./pages/MergePage";
 import { SplitPage } from "./pages/SplitPage";
-import { SettingsPage } from "./pages/SettingsPage";
+import { SettingsPage, initStore } from "./pages/SettingsPage";
 import { OcrPage } from "./pages/OcrPage";
 import { checkGhostscript } from "./lib/invoke";
-import { load } from '@tauri-apps/plugin-store';
-
-let store: any = null;
-const initStore = async () => {
-  if (!store) store = await load('settings.json');
-  return store;
-};
 
 function App() {
   const [activePage, setActivePage] = useState<Page>("compress");
@@ -55,7 +48,7 @@ function App() {
   }, []);
 
   return (
-    <div className="flex h-screen bg-white dark:bg-[#0f1117] overflow-hidden font-sans">
+    <div className="flex h-screen bg-white dark:bg-[#0f1117] overflow-hidden font-sans transition-colors duration-300">
       <Sidebar activePage={activePage} onNavigate={setActivePage} />
       
       <main className="flex-1 overflow-y-auto">
