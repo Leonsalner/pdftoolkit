@@ -45,7 +45,7 @@ pub async fn generate_page_thumbnails(
 
     for page_num in &page_numbers {
         let output_file = temp_dir.join(format!("page_{}.png", page_num));
-        let _output_str = output_file.to_string_lossy().to_string();
+        let output_str = output_file.to_string_lossy().to_string();
 
         let output = app
             .shell()
@@ -57,12 +57,10 @@ pub async fn generate_page_thumbnails(
                 "-dQUIET",
                 "-sDEVICE=png16m",
                 "-r72",
-                "-dFirstPage",
-                &page_num.to_string(),
-                "-dLastPage",
-                &page_num.to_string(),
+                &format!("-dFirstPage={}", page_num),
+                &format!("-dLastPage={}", page_num),
                 "-dFitPage",
-                "-sOutputFile=&output_str",
+                &format!("-sOutputFile={}", output_str),
                 &input_path,
             ])
             .output()
@@ -134,15 +132,34 @@ pub async fn save_organized_pdf(
         .filter_map(|p| page_map.get(p).copied())
         .collect();
 
-    if let Ok(root_id) = doc.trailer.get(b"Root").and_then(|r| r.as_reference()) {
-        if let Ok(root_obj) = doc.get_object_mut(root_id) {
-            if let lopdf::Object::Dictionary(ref mut dict) = root_obj {
-                let _ = dict.set("Kids", lopdf::Object::Array(
-                    page_order_ids.iter().map(|id| lopdf::Object::Reference(*id)).collect()
-                ));
-                let _ = dict.set("Count", lopdf::Object::Integer(page_order.len() as i64));
-            }
+    // Traverse: Trailer → /Root (Catalog) → /Pages (page tree root)
+    let catalog_id = doc.trailer
+        .get(b"Root")
+        .and_then(|r| r.as_reference())
+        .map_err(|_| "Failed to find /Root in PDF trailer".to_string())?;
+
+    let pages_id = {
+        let catalog_obj = doc.objects
+            .get(&catalog_id)
+            .ok_or_else(|| "Catalog object not found".to_string())?;
+        match catalog_obj {
+            lopdf::Object::Dictionary(dict) => dict
+                .get(b"Pages")
+                .and_then(|o| o.as_reference())
+                .map_err(|_| "Failed to find /Pages in catalog".to_string())?,
+            _ => return Err("Catalog object is not a dictionary".to_string()),
         }
+    }; // immutable borrow of doc.objects released here
+
+    // Rewrite Kids and Count on the actual Pages node
+    if let Some(lopdf::Object::Dictionary(ref mut pages_dict)) = doc.objects.get_mut(&pages_id) {
+        pages_dict.set(
+            "Kids",
+            lopdf::Object::Array(
+                page_order_ids.iter().map(|id| lopdf::Object::Reference(*id)).collect(),
+            ),
+        );
+        pages_dict.set("Count", lopdf::Object::Integer(page_order.len() as i64));
     }
 
     let output_path = if let Some(abs_path) = absolute_output_path {

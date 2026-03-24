@@ -21,9 +21,15 @@ export function OrganizePreviewModal({
 
   const deletedPages = currentPages.filter((p) => p.deleted);
   const rotatedPages = currentPages.filter((p) => p.rotation !== 0);
-  const reorderedPages = currentPages
-    .map((p, idx) => ({ page: p, originalPosition: idx + 1 }))
-    .filter(({ page, originalPosition }) => page.pageNumber !== originalPosition);
+  const nonDeletedPages = currentPages.filter((p) => !p.deleted);
+  const sortedByNumber = [...nonDeletedPages].sort((a, b) => a.pageNumber - b.pageNumber);
+  const reorderedPages = nonDeletedPages
+    .map((p, idx) => ({
+      page: p,
+      newPosition: idx + 1,
+      originalPosition: sortedByNumber.findIndex((op) => op.pageNumber === p.pageNumber) + 1,
+    }))
+    .filter(({ originalPosition, newPosition }) => originalPosition !== newPosition);
 
   const hasChanges = deletedPages.length > 0 || rotatedPages.length > 0 || reorderedPages.length > 0;
 
@@ -103,7 +109,7 @@ export function OrganizePreviewModal({
                     {t('organize.preview.reorders')} ({reorderedPages.length})
                   </h4>
                   <div className="space-y-1">
-                    {reorderedPages.slice(0, 5).map(({ page, originalPosition }) => (
+                    {reorderedPages.slice(0, 5).map(({ page, originalPosition, newPosition }) => (
                       <div
                         key={page.pageNumber}
                         className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400"
@@ -114,7 +120,7 @@ export function OrganizePreviewModal({
                         <span className="text-gray-400">{originalPosition}</span>
                         <span>→</span>
                         <span className="text-indigo-600 dark:text-indigo-400">
-                          {currentPages.findIndex((p) => p.pageNumber === page.pageNumber) + 1}
+                          {newPosition}
                         </span>
                       </div>
                     ))}

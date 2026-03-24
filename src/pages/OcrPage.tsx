@@ -60,6 +60,7 @@ export function OcrPage({ notify, isActive }: OcrPageProps) {
 
   const handleProcessAll = async () => {
     setIsProcessing(true);
+    let doneCount = 0;
 
     for (const file of files.filter((f) => f.status === 'pending')) {
       setFiles((prev) =>
@@ -75,6 +76,7 @@ export function OcrPage({ notify, isActive }: OcrPageProps) {
               : f
           )
         );
+        doneCount++;
       } catch (err) {
         setFiles((prev) =>
           prev.map((f) =>
@@ -88,8 +90,7 @@ export function OcrPage({ notify, isActive }: OcrPageProps) {
 
     setIsProcessing(false);
 
-    const completedCount = files.filter((f) => f.status === 'done').length;
-    if (completedCount > 0 && !isActive) {
+    if (doneCount > 0 && !isActive) {
       notify(t('ocr.success'), 'ocr');
     }
   };

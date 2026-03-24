@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useThumbnailLoader } from '../hooks/useThumbnailLoader';
 import { useI18n } from '../lib/i18n';
 
@@ -20,13 +20,11 @@ export function ThumbnailPickerModal({
   const { t } = useI18n();
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [lastSelected, setLastSelected] = useState<number | null>(null);
-  const gridRef = useRef<HTMLDivElement>(null);
 
-  const { thumbnails, isLoadingBatch, registerPageRef } = useThumbnailLoader({
+  const { thumbnails, isLoading, loadedCount } = useThumbnailLoader({
     inputPath: isOpen ? inputPath : null,
     totalPages,
     batchSize: 8,
-    bufferAhead: 5,
   });
 
   const handleClick = useCallback(
@@ -41,11 +39,7 @@ export function ThumbnailPickerModal({
         setSelected((prev) => {
           const next = new Set(prev);
           for (const p of range) {
-            if (next.has(p)) {
-              next.delete(p);
-            } else {
-              next.add(p);
-            }
+            next.add(p);
           }
           return next;
         });
@@ -96,20 +90,17 @@ export function ThumbnailPickerModal({
           </button>
         </div>
 
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
           <p className="text-sm text-gray-500 dark:text-gray-400">
             {t('thumbnail.selectHint')}
           </p>
-          <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400 mt-1">
-            {t('thumbnail.selectedCount')}: {selected.size}
+          <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
+            {t('thumbnail.selectedCount')}: {selected.size} {isLoading && `(${loadedCount}/${totalPages})`}
           </p>
         </div>
 
-        <div
-          ref={gridRef}
-          className="flex-1 overflow-y-auto p-4"
-        >
-          {isLoadingBatch && Object.keys(thumbnails).length === 0 && (
+        <div className="flex-1 overflow-y-auto p-4">
+          {isLoading && loadedCount === 0 && (
             <div className="flex items-center justify-center h-32">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
               <span className="ml-3 text-gray-500">{t('thumbnail.loading')}</span>
@@ -124,8 +115,6 @@ export function ThumbnailPickerModal({
               return (
                 <div
                   key={pageNum}
-                  ref={(el) => registerPageRef(pageNum, el)}
-                  data-page={pageNum}
                   onClick={(e) => handleClick(pageNum, e)}
                   className={`relative aspect-[3/4] rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${
                     isSelected

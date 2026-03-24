@@ -22,12 +22,12 @@ export function OrganizePage({ gsAvailable, notify, isActive }: OrganizePageProp
   const [showPreview, setShowPreview] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastDeleted, setLastDeleted] = useState<OrganizePageType | null>(null);
 
   const { thumbnails } = useThumbnailLoader({
     inputPath,
     totalPages,
     batchSize: 8,
-    bufferAhead: 5,
   });
 
   const handleFileSelect = useCallback(async (path: any, name: any) => {
@@ -71,15 +71,32 @@ export function OrganizePage({ gsAvailable, notify, isActive }: OrganizePageProp
   }, []);
 
   const handleDelete = useCallback((pageNumber: number) => {
-    setPages((prev) =>
-      prev.map((p) => {
+    setPages((prev) => {
+      const page = prev.find((p) => p.pageNumber === pageNumber);
+      if (page && !page.deleted) {
+        setLastDeleted(page);
+      }
+      return prev.map((p) => {
         if (p.pageNumber === pageNumber) {
           return { ...p, deleted: !p.deleted };
         }
         return p;
-      })
-    );
+      });
+    });
   }, []);
+
+  const handleUndo = useCallback(() => {
+    if (lastDeleted) {
+      setPages((prev) =>
+        prev.map((p) =>
+          p.pageNumber === lastDeleted.pageNumber
+            ? { ...p, deleted: false }
+            : p
+        )
+      );
+      setLastDeleted(null);
+    }
+  }, [lastDeleted]);
 
   const handlePreview = () => {
     setShowPreview(true);
@@ -136,8 +153,8 @@ export function OrganizePage({ gsAvailable, notify, isActive }: OrganizePageProp
 
       {!gsAvailable && (
         <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-yellow-800 dark:text-yellow-200">
-          <p className="font-semibold">{t('compress.gsRequired')}</p>
-          <p className="text-sm mt-1">{t('compress.gsInstall')}</p>
+          <p className="font-semibold">{t('organize.gsWarning')}</p>
+          <p className="text-sm mt-1">{t('organize.gsWarningDetail')}</p>
         </div>
       )}
 
@@ -184,6 +201,15 @@ export function OrganizePage({ gsAvailable, notify, isActive }: OrganizePageProp
             )}
 
             <div className="flex gap-4">
+              {lastDeleted && (
+                <button
+                  onClick={handleUndo}
+                  disabled={isSaving}
+                  className="px-4 py-3 rounded-lg font-medium transition-all duration-300 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800 border border-amber-300 dark:border-amber-700"
+                >
+                  ↩ {t('organize.undoDelete')} ({t('organize.preview.page')} {lastDeleted.pageNumber})
+                </button>
+              )}
               <button
                 onClick={handlePreview}
                 disabled={pages.length === 0 || isSaving}
@@ -193,7 +219,7 @@ export function OrganizePage({ gsAvailable, notify, isActive }: OrganizePageProp
                     : 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
               >
-                {t('organize.saveLoading')}
+                {t('organize.preview.title')}
               </button>
               <button
                 onClick={handleConfirmSave}

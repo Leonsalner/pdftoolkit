@@ -109,6 +109,8 @@ const translations: Translations = {
     'thumbnail.selectedCount': 'Selected',
     'thumbnail.page': 'Page',
     'organize.title': 'Organize Pages',
+    'organize.gsWarning': 'Ghostscript not found — page thumbnails will not be available.',
+    'organize.gsWarningDetail': 'You can still organize and save the PDF. Install Ghostscript to enable page previews.',
     'organize.save': 'Save PDF',
     'organize.saveLoading': 'Saving...',
     'organize.saveAnother': 'Save Another',
@@ -117,6 +119,7 @@ const translations: Translations = {
     'organize.rotateCW': 'Rotate clockwise',
     'organize.rotateCCW': 'Rotate counter-clockwise',
     'organize.deletePage': 'Delete page',
+    'organize.undoDelete': 'Undo Delete',
     'organize.pageCount': 'Pages',
     'organize.noChanges': 'No changes to save',
     'organize.loadPages': 'Loading pages...',
@@ -241,6 +244,8 @@ const translations: Translations = {
     'thumbnail.selectedCount': 'Vybrané',
     'thumbnail.page': 'Strana',
     'organize.title': 'Organizovať stránky',
+    'organize.gsWarning': 'Ghostscript nenájdený — miniatúry strán nebudú dostupné.',
+    'organize.gsWarningDetail': 'PDF môžete stále organizovať a uložiť. Nainštalujte Ghostscript pre zobrazenie náhľadov.',
     'organize.save': 'Uložiť PDF',
     'organize.saveLoading': 'Ukladanie...',
     'organize.saveAnother': 'Uložiť ďalšie',
@@ -249,6 +254,7 @@ const translations: Translations = {
     'organize.rotateCW': 'Otočiť doprava',
     'organize.rotateCCW': 'Otočiť doľava',
     'organize.deletePage': 'Odstrániť stranu',
+    'organize.undoDelete': 'Vrátiť odstránenie',
     'organize.pageCount': 'Stránky',
     'organize.noChanges': 'Žiadne zmeny na uloženie',
     'organize.loadPages': 'Načítavam stránky...',
@@ -373,6 +379,8 @@ const translations: Translations = {
     'thumbnail.selectedCount': 'Vybráno',
     'thumbnail.page': 'Stránka',
     'organize.title': 'Organizovat stránky',
+    'organize.gsWarning': 'Ghostscript nenalezen — miniatury stránek nebudou dostupné.',
+    'organize.gsWarningDetail': 'PDF stále můžete organizovat a uložit. Nainstalujte Ghostscript pro zobrazení náhledů.',
     'organize.save': 'Uložit PDF',
     'organize.saveLoading': 'Ukládání...',
     'organize.saveAnother': 'Uložit další',
@@ -381,6 +389,7 @@ const translations: Translations = {
     'organize.rotateCW': 'Otočit doprava',
     'organize.rotateCCW': 'Otočit doleva',
     'organize.deletePage': 'Odstranit stránku',
+    'organize.undoDelete': 'Vrátit odstranění',
     'organize.pageCount': 'Stránky',
     'organize.noChanges': 'Žádné změny k uložení',
     'organize.loadPages': 'Načítám stránky...',
@@ -391,7 +400,7 @@ const translations: Translations = {
     'organize.preview.deletions': 'Odstranění',
     'organize.preview.confirm': 'Uložit PDF',
     'organize.preview.cancel': 'Zrušit',
-    'organize.preview.noChanges': 'Ne Byly provedeny žádné změny.',
+    'organize.preview.noChanges': 'Nebyly provedeny žádné změny.',
     'organize.preview.page': 'Stránka',
     'organize.preview.movedTo': 'přesunuta na',
     'organize.preview.rotatedBy': 'otočena o',
@@ -423,7 +432,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     async function loadLang() {
       const store = await load('settings.json');
       const savedLang = await store.get('language');
-      if (savedLang === 'sk' || savedLang === 'en') {
+      if (savedLang === 'sk' || savedLang === 'en' || savedLang === 'cs') {
         setLangState(savedLang as Language);
       }
     }
