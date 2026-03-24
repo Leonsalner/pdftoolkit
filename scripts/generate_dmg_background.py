@@ -68,34 +68,15 @@ def draw_arrow(draw, x1, y1, x2, y2, color, thickness=2):
 img = Image.new("RGBA", (W, H), BG)
 draw = ImageDraw.Draw(img)
 
-# --- Subtle background grid pattern ---
-for x in range(0, W, 40):
-    draw.line([(x, 0), (x, H)], fill=(255, 255, 255, 6), width=1)
-for y in range(0, H, 40):
-    draw.line([(0, y), (W, y)], fill=(255, 255, 255, 6), width=1)
-
 # --- Title bar area ---
 draw_rounded_rect(draw, (30, 18, W - 30, 60), radius=8,
                   fill=SURFACE, outline=BORDER, width=1)
 title_font = load_font(15, bold=True)
 draw.text((W // 2, 39), "PDF Toolkit", font=title_font, fill=TEXT_PRI, anchor="mm")
 
-# --- Icon drop zones (circles with dashed-style outline) ---
-zone_r = 52
-for cx, cy, label in [(APP_X, APP_Y, "PDF Toolkit"), (APPS_X, APPS_Y, "Applications")]:
-    # glow
-    for r in range(zone_r + 18, zone_r - 1, -3):
-        alpha = max(0, int(20 - (r - zone_r) * 1.2))
-        draw.ellipse([cx - r, cy - r, cx + r, cy + r],
-                     outline=(*ACCENT, alpha), width=1)
-    # dashed circle ring
-    draw_rounded_rect(draw, [cx - zone_r, cy - zone_r, cx + zone_r, cy + zone_r],
-                      radius=zone_r, outline=BORDER, width=1)
-    # label below zone
-    lbl_font = load_font(11)
-    draw.text((cx, cy + zone_r + 14), label, font=lbl_font, fill=TEXT_MUTED, anchor="mm")
 
 # --- Arrow between zones ---
+zone_r = 52
 arrow_x1 = APP_X + zone_r + 12
 arrow_x2 = APPS_X - zone_r - 12
 draw_arrow(draw, arrow_x1, ARROW_Y, arrow_x2, ARROW_Y, ARROW_COL, thickness=2)
@@ -149,5 +130,5 @@ draw.text((W // 2, H - 14), "PDF Toolkit v2.0 — standalone, no additional setu
 
 # --- Save ---
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
-img.convert("RGB").save(OUT, "PNG", dpi=(144, 144))
+img.convert("RGB").save(OUT, "PNG")
 print(f"✓ Saved: {OUT}  ({W}x{H}px)")
