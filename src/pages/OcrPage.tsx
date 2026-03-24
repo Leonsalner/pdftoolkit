@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { DropZone } from '../components/DropZone';
 import { ResultBanner } from '../components/ResultBanner';
-import { useTauriCommand } from '../hooks/useTauriCommand';
+import { BatchFileList, type BatchFile } from '../components/BatchFileList';
 import { invoke } from '@tauri-apps/api/core';
 import { useI18n } from '../lib/i18n';
 import { writeTextFile } from '@tauri-apps/plugin-fs';
@@ -22,50 +22,91 @@ interface OcrPageProps {
 
 export function OcrPage({ notify, isActive }: OcrPageProps) {
   const { t } = useI18n();
-  const [filePath, setFilePath] = useState<string | null>(null);
-  const [fileName, setFileName] = useState<string | null>(null);
+  const [files, setFiles] = useState<BatchFile[]>([]);
   const [ocrLang, setOcrLang] = useState('eng');
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const { execute, result, error, loading, reset } = useTauriCommand(extractTextOcr);
+  const pendingCount = files.filter((f) => f.status === 'pending').length;
+  const doneCount = files.filter((f) => f.status === 'done').length;
+  const errorCount = files.filter((f) => f.status === 'error').length;
 
-  const handleFileSelect = (path: any, name: any) => {
-    const p = Array.isArray(path) ? path[0] : path;
-    const n = Array.isArray(name) ? name[0] : name;
-    setFilePath(p);
-    setFileName(n);
-    reset();
+  const handleAddFiles = (paths: string[], names: string[]) => {
+    const remaining = 10 - files.length;
+    const toAdd = paths.slice(0, remaining).map((p, i) => ({
+      id: crypto.randomUUID(),
+      path: p,
+      name: names[i] || p.split('/').pop() || p,
+      status: 'pending' as const,
+    }));
+    setFiles((prev) => [...prev, ...toAdd]);
   };
 
-  const handleExtract = async () => {
-    if (filePath) {
-      const res = await execute(filePath, ocrLang);
-      if (res && !isActive) {
-        notify(t('ocr.success'), 'ocr');
-      }
+  const handleFileSelect = (path: any, name: any) => {
+    if (Array.isArray(path)) {
+      const n = Array.isArray(name) ? name : path.map((p: string) => p.split('/').pop() || p);
+      handleAddFiles(path, n);
+    } else {
+      handleAddFiles([path], [name]);
     }
   };
 
-  const handleStartOver = () => {
-    setFilePath(null);
-    setFileName(null);
-    reset();
+  const handleRemove = (id: string) => {
+    setFiles((prev) => prev.filter((f) => f.id !== id));
   };
 
-  const handleSaveText = async () => {
-    if (!result || !result.text) return;
-    
-    try {
-      const defaultName = fileName ? fileName.replace(/\.pdf$/i, '_ocr.txt') : 'extracted_ocr.txt';
-      const savePath = await save({
-        defaultPath: defaultName,
-        filters: [{ name: 'Text', extensions: ['txt'] }]
-      });
+  const handleClearAll = () => {
+    setFiles([]);
+  };
 
-      if (savePath) {
-        await writeTextFile(savePath, result.text);
+  const handleProcessAll = async () => {
+    setIsProcessing(true);
+
+    for (const file of files.filter((f) => f.status === 'pending')) {
+      setFiles((prev) =>
+        prev.map((f) => (f.id === file.id ? { ...f, status: 'processing' as const } : f))
+      );
+
+      try {
+        const result = await extractTextOcr(file.path, ocrLang);
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.id === file.id
+              ? { ...f, status: 'done' as const, result }
+              : f
+          )
+        );
+      } catch (err) {
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.id === file.id
+              ? { ...f, status: 'error' as const, error: String(err) }
+              : f
+          )
+        );
       }
-    } catch (err) {
-      console.error('Failed to save file', err);
+    }
+
+    setIsProcessing(false);
+
+    const completedCount = files.filter((f) => f.status === 'done').length;
+    if (completedCount > 0 && !isActive) {
+      notify(t('ocr.success'), 'ocr');
+    }
+  };
+
+  const handleSaveText = async (id: string) => {
+    const file = files.find((f) => f.id === id);
+    if (!file || !file.result || typeof file.result !== 'object' || !('text' in file.result)) return;
+
+    const result = file.result as OcrResult;
+    const defaultName = file.name.replace(/\.pdf$/i, '_ocr.txt');
+    const savePath = await save({
+      defaultPath: defaultName,
+      filters: [{ name: 'Text', extensions: ['txt'] }],
+    });
+
+    if (savePath) {
+      await writeTextFile(savePath, result.text);
     }
   };
 
@@ -75,24 +116,35 @@ export function OcrPage({ notify, isActive }: OcrPageProps) {
 
       <div className="space-y-8">
         <div>
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('common.step1')}</h3>
-          {filePath ? (
-            <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800 flex justify-between items-center transition-all duration-300">
-              <span className="font-medium truncate">{fileName}</span>
-              <button
-                onClick={handleStartOver}
-                className="text-sm text-gray-500 hover:text-red-500 transition-colors"
-              >
-                {t('common.change')}
-              </button>
-            </div>
-          ) : (
-            <DropZone onFileSelect={handleFileSelect} />
-          )}
+          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+            {files.length === 0 ? t('common.step1') : t('common.step1.add')}
+          </h3>
+          <DropZone onFileSelect={handleFileSelect} multiple />
         </div>
 
-        {filePath && (
-          <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+        {files.length > 0 && (
+          <BatchFileList
+            files={files}
+            onRemove={handleRemove}
+            onSaveText={handleSaveText}
+            t={t}
+          />
+        )}
+
+        {files.length > 0 && (
+          <div className="flex gap-4">
+            <button
+              onClick={handleClearAll}
+              disabled={isProcessing}
+              className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm"
+            >
+              {t('batch.clearAll')}
+            </button>
+          </div>
+        )}
+
+        {files.length > 0 && (
+          <div>
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('ocr.language')}</h3>
             <select
               value={ocrLang}
@@ -106,57 +158,47 @@ export function OcrPage({ notify, isActive }: OcrPageProps) {
           </div>
         )}
 
-        {!result ? (
-          <div>
+        {files.length > 0 && (
+          <div className="flex gap-4">
             <button
-              onClick={handleExtract}
-              disabled={!filePath || loading}
-              className={`w-full py-3 px-4 rounded-lg text-white font-medium transition-all duration-300 ${
-                !filePath || loading
+              onClick={handleProcessAll}
+              disabled={pendingCount === 0 || isProcessing}
+              className={`flex-1 py-3 px-4 rounded-lg text-white font-medium transition-all duration-300 ${
+                pendingCount === 0 || isProcessing
                   ? 'bg-gray-400 cursor-not-allowed opacity-70'
                   : 'bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98]'
               }`}
             >
-              {loading ? t('ocr.buttonLoading') : t('ocr.button')}
+              {isProcessing ? t('batch.processing') : t('batch.processAll')}
             </button>
-          </div>
-        ) : (
-          <div className="space-y-4 animate-in fade-in zoom-in-95 duration-500">
-            <ResultBanner
-              type="success"
-              message={t('ocr.success')}
-            />
-            
-            <details className="group border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800">
-              <summary className="px-4 py-3 bg-gray-50 dark:bg-gray-800/50 cursor-pointer font-medium text-gray-700 dark:text-gray-200 select-none flex justify-between items-center transition-colors hover:bg-gray-100 dark:hover:bg-gray-700/50">
-                {t('ocr.textPreview')}
-                <span className="transform group-open:rotate-180 transition-transform duration-300">▼</span>
-              </summary>
-              <div className="p-4 bg-white dark:bg-[#0f1117] max-h-96 overflow-y-auto">
-                <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 font-sans">
-                  {result.text}
-                </pre>
-              </div>
-            </details>
-
-            <div className="flex gap-4">
-              <button
-                onClick={handleSaveText}
-                className="flex-1 py-3 px-4 rounded-lg text-white font-medium transition-all duration-300 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] shadow-sm"
-              >
-                {t('ocr.saveText')}
-              </button>
-              <button
-                onClick={handleStartOver}
-                className="flex-1 py-3 px-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 active:scale-[0.98]"
-              >
-                {t('ocr.buttonAnother')}
-              </button>
-            </div>
           </div>
         )}
 
-        {error && <ResultBanner type="error" message={t('ocr.failed')} details={error} />}
+        {files.length > 0 && (
+          <div className="text-sm text-gray-500 dark:text-gray-400 text-center">
+            {`${files.length} files | ${doneCount} done | ${errorCount} errors`}
+          </div>
+        )}
+
+        {files.length === 0 && (
+          <div className="text-sm text-gray-500 dark:text-gray-400 text-center">
+            {t('batch.maxFiles')}
+          </div>
+        )}
+
+        {files.length > 0 && doneCount > 0 && (
+          <ResultBanner
+            type="success"
+            message={t('ocr.success')}
+          />
+        )}
+
+        {files.length > 0 && errorCount > 0 && (
+          <ResultBanner
+            type="error"
+            message={t('ocr.failed')}
+          />
+        )}
       </div>
     </div>
   );

@@ -21,6 +21,16 @@ export interface SplitResult {
   total_files: number;
 }
 
+export interface ThumbnailData {
+  page_number: number;
+  data: string;
+}
+
+export interface OrganizeResult {
+  output_path: string;
+  pages_written: number;
+}
+
 export type Preset = 'screen' | 'ebook' | 'printer' | 'prepress';
 
 export const compressPdf = (inputPath: string, preset: Preset, outputName?: string, absoluteOutputPath?: string) =>
@@ -43,3 +53,15 @@ export const checkGhostscript = () =>
 
 export const getFileSize = (inputPath: string) =>
   invoke<number>('get_file_size', { inputPath });
+
+export const generatePageThumbnails = (inputPath: string, pageNumbers: number[], maxWidth: number) =>
+  invoke<ThumbnailData[]>('generate_page_thumbnails', { inputPath, pageNumbers, maxWidth });
+
+export const saveOrganizedPdf = (
+  inputPath: string,
+  pageOrder: number[],
+  rotations: Record<string, number>,
+  outputName?: string,
+  absoluteOutputPath?: string
+) =>
+  invoke<OrganizeResult>('save_organized_pdf', { inputPath, pageOrder, rotations, outputName, absoluteOutputPath });

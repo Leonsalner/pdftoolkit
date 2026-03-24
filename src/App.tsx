@@ -5,6 +5,7 @@ import { ExtractPage } from "./pages/ExtractPage";
 import { MergePage } from "./pages/MergePage";
 import { SplitPage } from "./pages/SplitPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { OrganizePage } from "./pages/OrganizePage";
 import { initStore } from "./lib/store";
 import { OcrPage } from "./pages/OcrPage";
 import { checkGhostscript } from "./lib/invoke";
@@ -94,6 +95,9 @@ function App() {
         </div>
         <div className={activePage === "settings" ? "block" : "hidden"}>
           <SettingsPage />
+        </div>
+        <div className={activePage === "organize" ? "block" : "hidden"}>
+          <OrganizePage gsAvailable={gsAvailable} notify={notify} isActive={activePage === "organize"} />
         </div>
       </main>
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { DropZone } from '../components/DropZone';
 import { RangeInput } from '../components/RangeInput';
 import { ResultBanner } from '../components/ResultBanner';
+import { ThumbnailPickerModal, rangesToString } from '../components/ThumbnailPickerModal';
 import { useTauriCommand } from '../hooks/useTauriCommand';
 import { extractPages, getPdfPageCount } from '../lib/invoke';
 import { useI18n } from '../lib/i18n';
@@ -21,6 +22,7 @@ export function ExtractPage({ notify, isActive }: ExtractPageProps) {
   const [customFileName, setCustomFileName] = useState<string>('');
   const [rangeInput, setRangeInput] = useState('');
   const [askEveryTime, setAskEveryTime] = useState(false);
+  const [showThumbnailPicker, setShowThumbnailPicker] = useState(false);
 
   const { execute: fetchPageCount, result: totalPages, error: pageCountError, reset: resetPageCount } = useTauriCommand(getPdfPageCount);
   const { execute: performExtract, result, error: extractError, loading, reset: resetExtract } = useTauriCommand(extractPages);
@@ -108,6 +110,14 @@ export function ExtractPage({ notify, isActive }: ExtractPageProps) {
         <div className={filePath ? "animate-in fade-in slide-in-from-top-2 duration-300" : ""}>
           <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('extract.step2')}</h3>
           <RangeInput value={rangeInput} onChange={(val) => { setRangeInput(val); resetExtract(); }} totalPages={totalPages || null} />
+          {filePath && totalPages && (
+            <button
+              onClick={() => setShowThumbnailPicker(true)}
+              className="mt-3 w-full py-2 px-4 rounded-lg border border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 font-medium transition-colors text-sm"
+            >
+              {t('thumbnail.title')}
+            </button>
+          )}
         </div>
 
         {filePath && !askEveryTime && (
@@ -154,6 +164,20 @@ export function ExtractPage({ notify, isActive }: ExtractPageProps) {
             type="success"
             message={t('extract.success')}
             details={`${t('common.savedTo')} ${result.output_path} | ${t('extract.extracted')} ${result.pages_extracted} ${t('extract.pagesLower')}`}
+          />
+        )}
+
+        {filePath && totalPages && (
+          <ThumbnailPickerModal
+            isOpen={showThumbnailPicker}
+            inputPath={filePath}
+            totalPages={totalPages}
+            onConfirm={(pages) => {
+              setRangeInput(rangesToString(pages));
+              setShowThumbnailPicker(false);
+              resetExtract();
+            }}
+            onClose={() => setShowThumbnailPicker(false)}
           />
         )}
       </div>

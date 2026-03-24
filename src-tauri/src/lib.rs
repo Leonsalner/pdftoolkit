@@ -18,6 +18,8 @@ pub fn run() {
             commands::merge::merge_pdfs,
             commands::ocr::extract_text_ocr,
             commands::split::split_pdf,
+            commands::organize::generate_page_thumbnails,
+            commands::organize::save_organized_pdf,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

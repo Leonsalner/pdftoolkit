@@ -1,37 +1,36 @@
 # Tauri PDF Toolkit — Roadmap
 
-## V2 High Priority Goals
-The following items are prioritized for the next major release, providing a comprehensive set of features for local PDF management.
+## Current Progress (V1.1) - ✅ Completed
+- **PDF Compression**: Low/Medium/High presets using bundled Ghostscript.
+- **Merge & Split**: Full multi-file merge and intelligent splitting.
+- **Text Recognition (OCR)**: 100% offline extraction for EN/SK/CS.
+- **Settings**: Persistent output paths, i18n support, and system-aware dark mode.
+- **Standalone Sidecars**: Self-contained binaries for zero-install portability.
+- **Visual Thumbnail Picker**: Browse PDF pages visually to select ranges for extraction or splitting.
+- **Page Organizer**: Rearrange, rotate, or delete individual pages in a grid view.
+- **Batch Processor**: Process multiple files at once for compression and OCR.
 
-1. **Settings & Path Config**
-   - Allow users to choose an output directory other than `~/Downloads`.
-   - Dedicated settings page to consolidate app preferences.
-   - Ghostscript path override (if not found in standard `$PATH`).
-   - Theme toggle (Light/Dark mode force).
+## High Priority (V1.2 - New Capabilities)
 
-2. **Visual Thumbnail Picker**
-   - Provide visual thumbnails of PDF pages for the "Extract" workflow.
-   - Allow users to click thumbnails to select pages instead of manually typing page ranges.
+## Feature Expansion (V1.2 - New Capabilities)
+4. **Format Conversion** (Diff: 5/10)
+   - Convert PDF pages to high-res PNG/JPEG images.
+5. **Metadata Editor** (Diff: 2/10)
+   - Edit Title, Author, and Subject fields of documents.
+6. **"Searchable PDF" Generator** (Diff: 7/10)
+   - Overlay OCR text onto scanned PDFs to make them selectable/searchable.
 
-3. **Merge & Split Capabilities**
-   - **Merge:** Combine multiple PDF files into a single document, with drag-and-drop reordering.
-   - **Split:** Break a single PDF into multiple documents by a set interval (e.g., every 5 pages) or individual pages.
+## Advanced Tools (V2.0 - Security & Pro Features)
+7. **Security Suite** (Diff: 6/10)
+   - Password protection, encryption, and permission management.
+8. **Watermarking** (Diff: 6/10)
+   - Batch apply text or image stamps to pages.
+9. **CoreML AI Assistant (Experimental)** (Diff: 8/10)
+   - Use Apple's local models or WebLLM for 100% offline document summarization and Q&A.
+10. **Digital Signatures** (Diff: 8/10)
+    - Sign documents locally using PKCS#12 certificates.
 
-4. **Format Conversion**
-   - Convert PDF pages into images (PNG, JPEG) with DPI options.
-   - Extract text and formatting to generate editable DOCX files.
-
-5. **Local OCR Support**
-   - Integrate local Optical Character Recognition (OCR) to extract text from scanned PDFs.
-   - Leverage `tesseract` (installed locally) or similar Rust wrappers to ensure all text extraction remains completely offline and private.
-
-## Theoretically Possible (Future Exploration)
-Ambitious, yet feasible features that could turn this toolkit into a pro-grade application:
-
-- **PDF Watermarking & Stamping:** Apply customizable text or image watermarks across selected pages, or batch apply them to multiple PDFs.
-- **Password Protection & Encryption:** Add/remove passwords and configure PDF permission settings (e.g., restrict printing, copying, or modifications).
-- **Metadata Editor:** Direct editing of document metadata (Title, Author, Subject, Keywords, Creator).
-- **Advanced Compression Tuning:** A pro-level UI for Ghostscript flags, allowing users to manually tweak color downsampling, DPI, and image compression algorithms.
-- **Redaction Tool:** Visually select and permanently strip sensitive text or images from the underlying document structure (not just drawing black boxes over them).
-- **Digital Signatures:** Cryptographically sign PDFs using local certificates to guarantee document authenticity.
-- **Form Filling & Extraction:** Detect PDF form fields and allow filling them out or extracting data in batch (e.g., to CSV).
+## Theoretically Possible (Long-term)
+- **PDF to DOCX Reconstruction** (Diff: 9/10)
+- **True Redaction Tool** (Diff: 10/10)
+- **Form Data Extraction** (Diff: 7/10)
