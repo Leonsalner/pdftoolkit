@@ -140,7 +140,10 @@ export function AiPage({ isActive }: { notify: (m: string, s: Page) => void; isA
   return (
     <div className="max-w-4xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-500 h-full flex flex-col">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('ai.title')}</h2>
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('ai.title')}</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-normal">{t('ai.desc')}</p>
+        </div>
         {isServerRunning && (
           <button onClick={handleStop} className="text-sm px-3 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors">
             {t('ai.stop')}
