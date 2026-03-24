@@ -20,9 +20,11 @@ export function ExtractPage() {
     }
   }, [filePath, fetchPageCount]);
 
-  const handleFileSelect = (path: string, name: string) => {
-    setFilePath(path);
-    setFileName(name);
+  const handleFileSelect = (path: any, name: any) => {
+    const p = Array.isArray(path) ? path[0] : path;
+    const n = Array.isArray(name) ? name[0] : name;
+    setFilePath(p);
+    setFileName(n);
     setRangeInput('');
     setCustomFileName('');
     resetPageCount();

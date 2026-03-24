@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Sidebar, Page } from "./components/Sidebar";
 import { CompressPage } from "./pages/CompressPage";
 import { ExtractPage } from "./pages/ExtractPage";
+import { MergePage } from "./pages/MergePage";
+import { SplitPage } from "./pages/SplitPage";
 import { checkGhostscript } from "./lib/invoke";
 
 function App() {
@@ -24,6 +26,8 @@ function App() {
       <main className="flex-1 overflow-y-auto">
         {activePage === "compress" && <CompressPage gsAvailable={gsAvailable} />}
         {activePage === "extract" && <ExtractPage />}
+        {activePage === "merge" && <MergePage />}
+        {activePage === "split" && <SplitPage />}
       </main>
     </div>
   );

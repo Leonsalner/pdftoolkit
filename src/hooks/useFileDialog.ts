@@ -2,10 +2,10 @@ import { useCallback } from 'react';
 import { open } from '@tauri-apps/plugin-dialog';
 
 export function useFileDialog() {
-  const openDialog = useCallback(async (): Promise<string | null> => {
+  const openDialog = useCallback(async (multiple: boolean = false): Promise<string | string[] | null> => {
     try {
       const selected = await open({
-        multiple: false,
+        multiple,
         filters: [
           {
             name: 'PDF',
@@ -14,9 +14,6 @@ export function useFileDialog() {
         ],
       });
 
-      if (Array.isArray(selected)) {
-        return selected[0] || null;
-      }
       return selected || null;
     } catch (error) {
       console.error('Failed to open file dialog', error);

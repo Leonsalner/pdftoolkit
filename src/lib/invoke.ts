@@ -11,6 +11,16 @@ export interface ExtractResult {
   pages_extracted: number;
 }
 
+export interface MergeResult {
+  output_path: string;
+  files_merged: number;
+}
+
+export interface SplitResult {
+  output_paths: string[];
+  total_files: number;
+}
+
 export type Preset = 'screen' | 'ebook' | 'printer' | 'prepress';
 
 export const compressPdf = (inputPath: string, preset: Preset, outputName?: string) =>
@@ -18,6 +28,12 @@ export const compressPdf = (inputPath: string, preset: Preset, outputName?: stri
 
 export const extractPages = (inputPath: string, ranges: string, outputName?: string) =>
   invoke<ExtractResult>('extract_pages', { inputPath, ranges, outputName });
+
+export const mergePdfs = (filePaths: string[], outputName?: string) =>
+  invoke<MergeResult>('merge_pdfs', { filePaths, outputName });
+
+export const splitPdf = (inputPath: string, mode: string, value: string, outputPrefix?: string) =>
+  invoke<SplitResult>('split_pdf', { inputPath, mode, value, outputPrefix });
 
 export const getPdfPageCount = (inputPath: string) =>
   invoke<number>('get_pdf_page_count', { inputPath });

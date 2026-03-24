@@ -10,7 +10,6 @@ const PRESETS: { value: Preset; label: string; factor: number; desc: string }[] 
   { value: 'screen', label: 'Low', factor: 0.15, desc: 'Best for web & email. Lowest resolution.' },
   { value: 'ebook', label: 'Medium', factor: 0.35, desc: 'Good balance of size and quality.' },
   { value: 'printer', label: 'High', factor: 0.75, desc: 'High resolution for home/office printing.' },
-  { value: 'prepress', label: 'Max', factor: 0.95, desc: 'Preserves colors & highest resolution.' },
 ];
 
 export function PresetSelector({ value, onChange, fileSize }: PresetSelectorProps) {

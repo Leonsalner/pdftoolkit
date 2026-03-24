@@ -2,20 +2,26 @@ import { useCallback } from 'react';
 import { useFileDialog } from '../hooks/useFileDialog';
 
 interface DropZoneProps {
-  onFileSelect: (path: string, name: string) => void;
+  onFileSelect: (path: any, name: any) => void;
   accept?: string;
+  multiple?: boolean;
 }
 
-export function DropZone({ onFileSelect }: DropZoneProps) {
+export function DropZone({ onFileSelect, multiple = false }: DropZoneProps) {
   const { openDialog } = useFileDialog();
 
   const handleBrowse = useCallback(async () => {
-    const path = await openDialog();
-    if (path) {
-      const name = path.split('/').pop() || path.split('\\').pop() || 'Selected File';
-      onFileSelect(path, name); 
+    const paths = await openDialog(multiple);
+    if (paths) {
+      if (Array.isArray(paths)) {
+        const names = paths.map(p => p.split('/').pop() || p.split('\\').pop() || 'Selected File');
+        onFileSelect(paths, names);
+      } else {
+        const name = paths.split('/').pop() || paths.split('\\').pop() || 'Selected File';
+        onFileSelect(paths, name);
+      }
     }
-  }, [openDialog, onFileSelect]);
+  }, [openDialog, onFileSelect, multiple]);
 
   return (
     <div

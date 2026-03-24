@@ -1,4 +1,4 @@
-export type Page = 'compress' | 'extract';
+export type Page = 'compress' | 'extract' | 'merge' | 'split';
 
 interface SidebarProps {
   activePage: Page;
@@ -9,6 +9,8 @@ export function Sidebar({ activePage, onNavigate }: SidebarProps) {
   const navItems = [
     { id: 'compress' as Page, label: 'Compress PDF' },
     { id: 'extract' as Page, label: 'Extract Pages' },
+    { id: 'merge' as Page, label: 'Merge PDFs' },
+    { id: 'split' as Page, label: 'Split PDF' },
   ];
 
   return (

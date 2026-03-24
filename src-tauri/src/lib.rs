@@ -12,6 +12,8 @@ pub fn run() {
             commands::compress::get_file_size,
             commands::extract::extract_pages,
             commands::extract::get_pdf_page_count,
+            commands::merge::merge_pdfs,
+            commands::split::split_pdf,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
