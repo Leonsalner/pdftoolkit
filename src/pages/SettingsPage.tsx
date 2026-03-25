@@ -124,10 +124,6 @@ export function SettingsPage() {
     applyTheme(newTheme);
   };
 
-  const handleSystemPreferenceToggle = async () => {
-    await handleThemeChange(theme === 'system' ? 'light' : 'system');
-  };
-
   const handleSelectDir = async () => {
     const selected = await open({
       directory: true,
@@ -260,12 +256,7 @@ export function SettingsPage() {
             </h3>
           </div>
 
-          <div className="space-y-5">
-            <div>
-              <p className="text-sm font-medium text-[var(--text-primary)]">{t('settings.theme')}</p>
-              <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">{t('settings.themeDesc')}</p>
-            </div>
-
+          <div className="space-y-6">
             <div className="flex flex-wrap gap-4">
               <ThemePreviewCard
                 mode="light"
@@ -285,14 +276,6 @@ export function SettingsPage() {
                 selected={theme === 'system'}
                 onClick={() => handleThemeChange('system')}
               />
-            </div>
-
-            <div className="flex items-center justify-between gap-6 rounded-2xl border border-[var(--border)] bg-[var(--bg-base)] p-5">
-              <div>
-                <p className="text-sm font-medium text-[var(--text-primary)]">{t('settings.matchSystem')}</p>
-                <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">{t('settings.matchSystemDesc')}</p>
-              </div>
-              <Toggle enabled={theme === 'system'} onClick={handleSystemPreferenceToggle} />
             </div>
           </div>
         </section>
