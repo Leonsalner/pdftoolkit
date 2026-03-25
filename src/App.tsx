@@ -15,17 +15,22 @@ import { SignPage } from "./pages/SignPage";
 import { AiPage } from "./pages/AiPage";
 import { MetadataPage } from "./pages/MetadataPage";
 import { checkGhostscript } from "./lib/invoke";
+import { check } from '@tauri-apps/plugin-updater';
+import { relaunch } from '@tauri-apps/plugin-process';
 
 interface Toast {
   visible: boolean;
   message: string;
   targetPage: Page | null;
+  isUpdate?: boolean;
+  updateAction?: () => void;
 }
 
 function App() {
   const [activePage, setActivePage] = useState<Page>("compress");
   const [gsAvailable, setGsAvailable] = useState<boolean>(true);
   const [toast, setToast] = useState<Toast>({ visible: false, message: "", targetPage: null });
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     checkGhostscript().then(available => {
@@ -64,15 +69,55 @@ function App() {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
+  // Background update check on launch
+  useEffect(() => {
+    async function checkForUpdates() {
+      try {
+        const update = await check();
+        if (update) {
+          setToast({
+            visible: true,
+            message: `Update v${update.version} is available!`,
+            targetPage: null,
+            isUpdate: true,
+            updateAction: async () => {
+              setIsUpdating(true);
+              setToast({ visible: true, message: 'Downloading update...', targetPage: null });
+              try {
+                await update.downloadAndInstall();
+                await relaunch();
+              } catch (e) {
+                console.error(e);
+                setToast({ visible: true, message: 'Update failed to install.', targetPage: null });
+                setIsUpdating(false);
+              }
+            }
+          });
+        }
+      } catch (error) {
+        console.error("Failed to check for updates:", error);
+      }
+    }
+    // Delay check slightly to not block initial render
+    setTimeout(checkForUpdates, 3000);
+  }, []);
+
   const notify = useCallback((message: string, sourcePage: Page) => {
     setToast({ visible: true, message, targetPage: sourcePage });
     // Auto hide toast after 5 seconds if not clicked
     setTimeout(() => {
-      setToast(prev => prev.targetPage === sourcePage ? { ...prev, visible: false } : prev);
+      setToast(prev => prev.targetPage === sourcePage && !prev.isUpdate ? { ...prev, visible: false } : prev);
     }, 5000);
   }, []);
 
   const handleToastClick = () => {
+    if (toast.isUpdate && toast.updateAction) {
+      if (!isUpdating) {
+        toast.updateAction();
+      }
+      return;
+    }
+    
     if (toast.targetPage) {
       setActivePage(toast.targetPage);
     }
@@ -134,18 +179,31 @@ function App() {
       {toast.visible && (
         <div 
           onClick={handleToastClick}
-          className="fixed bottom-6 right-6 bg-[var(--text-primary)] text-[var(--bg-base)] px-6 py-4 rounded-xl shadow-2xl cursor-pointer hover:bg-[var(--text-secondary)] transition-all transform translate-y-0 animate-in slide-in-from-bottom-4 duration-300 flex items-center space-x-3 z-50"
+          className={`fixed bottom-6 right-6 px-6 py-4 rounded-xl shadow-2xl transition-all transform translate-y-0 animate-in slide-in-from-bottom-4 duration-300 flex items-center space-x-3 z-50 ${
+            toast.isUpdate 
+              ? 'bg-[var(--cat-content)] text-white cursor-pointer hover:opacity-90' 
+              : 'bg-[var(--text-primary)] text-[var(--bg-base)] cursor-pointer hover:bg-[var(--text-secondary)]'
+          }`}
         >
           <div className="flex-1">
-            <p className="font-semibold text-sm">{toast.message}</p>
-            <p className="text-xs opacity-80 underline">Click to view results</p>
+            <p className="font-semibold text-sm flex items-center gap-2">
+              {isUpdating && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />}
+              {toast.message}
+            </p>
+            {!isUpdating && (
+              <p className="text-xs opacity-80 underline mt-0.5">
+                {toast.isUpdate ? 'Click to download and restart' : 'Click to view results'}
+              </p>
+            )}
           </div>
-          <button 
-            onClick={(e) => { e.stopPropagation(); setToast({ ...toast, visible: false }); }}
-            className="opacity-60 hover:opacity-100 transition-opacity"
-          >
-            ✕
-          </button>
+          {!isUpdating && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); setToast({ ...toast, visible: false }); }}
+              className="opacity-60 hover:opacity-100 transition-opacity ml-2"
+            >
+              ✕
+            </button>
+          )}
         </div>
       )}
     </div>

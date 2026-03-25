@@ -1,8 +1,8 @@
-use std::fs;
-use serde::Serialize;
-use tauri_plugin_shell::ShellExt;
 use crate::utils::paths::{get_output_dir, output_filename};
 use crate::utils::validation::validate_pdf;
+use serde::Serialize;
+use std::fs;
+use tauri_plugin_shell::ShellExt;
 
 #[derive(Serialize)]
 pub struct CompressResult {
@@ -12,13 +12,22 @@ pub struct CompressResult {
 }
 
 #[tauri::command]
-pub async fn compress_pdf(app: tauri::AppHandle, input_path: String, preset: String, output_name: Option<String>, absolute_output_path: Option<String>) -> Result<CompressResult, String> {
+pub async fn compress_pdf(
+    app: tauri::AppHandle,
+    input_path: String,
+    preset: String,
+    output_name: Option<String>,
+    absolute_output_path: Option<String>,
+) -> Result<CompressResult, String> {
     // Audit: Validate input PDF
     validate_pdf(&input_path)?;
 
     let valid_presets = ["screen", "ebook", "printer", "prepress"];
     if !valid_presets.contains(&preset.as_str()) {
-        return Err(format!("Invalid preset: {}. Use screen, ebook, printer, or prepress", preset));
+        return Err(format!(
+            "Invalid preset: {}. Use screen, ebook, printer, or prepress",
+            preset
+        ));
     }
 
     let output_path = if let Some(abs_path) = absolute_output_path {
@@ -37,10 +46,12 @@ pub async fn compress_pdf(app: tauri::AppHandle, input_path: String, preset: Str
         };
         out_dir.join(file_name)
     };
-    
+
     // Audit: Check if output file already exists
     if output_path.exists() {
-        return Err("Output file already exists. Please choose a different name or location.".to_string());
+        return Err(
+            "Output file already exists. Please choose a different name or location.".to_string(),
+        );
     }
 
     let output_str = output_path.to_string_lossy().to_string();
@@ -49,7 +60,9 @@ pub async fn compress_pdf(app: tauri::AppHandle, input_path: String, preset: Str
         .map_err(|e| format!("Failed to read original file size: {}", e))?
         .len();
 
-    let output = app.shell().sidecar("gs")
+    let output = app
+        .shell()
+        .sidecar("gs")
         .map_err(|e| format!("Failed to initialize Ghostscript sidecar: {}", e))?
         .args([
             "-sDEVICE=pdfwrite",
@@ -67,7 +80,9 @@ pub async fn compress_pdf(app: tauri::AppHandle, input_path: String, preset: Str
 
     if !output.status.success() {
         // Audit: Sanitize error
-        return Err("Compression failed. The document might be corrupted or protected.".to_string());
+        return Err(
+            "Compression failed. The document might be corrupted or protected.".to_string(),
+        );
     }
 
     let compressed_size = fs::metadata(&output_path)
@@ -84,12 +99,10 @@ pub async fn compress_pdf(app: tauri::AppHandle, input_path: String, preset: Str
 #[tauri::command]
 pub async fn check_ghostscript(app: tauri::AppHandle) -> Result<bool, String> {
     match app.shell().sidecar("gs") {
-        Ok(cmd) => {
-            match cmd.arg("--version").output().await {
-                Ok(output) => Ok(output.status.success()),
-                Err(_) => Ok(false),
-            }
-        }
+        Ok(cmd) => match cmd.arg("--version").output().await {
+            Ok(output) => Ok(output.status.success()),
+            Err(_) => Ok(false),
+        },
         Err(_) => Ok(false),
     }
 }

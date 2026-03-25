@@ -5,6 +5,8 @@ use tauri::Manager;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             app.manage(commands::ai::AiState {
                 server_process: std::sync::Mutex::new(None),
@@ -19,7 +21,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::ai::get_ai_specs,
             commands::ai::check_model_exists,
+            commands::ai::check_ai_tools_exists,
             commands::ai::download_model,
+            commands::ai::download_ai_tools,
             commands::ai::start_ai_server,
             commands::ai::stop_ai_server,
             commands::compress::compress_pdf,

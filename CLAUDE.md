@@ -13,10 +13,11 @@ It uses **Tauri 2.x**, **React 19**, **TypeScript**, **Tailwind CSS v4** (via Vi
   - PDF Compression, Format Conversion, & OCR Image Extraction: Handled by shelling out to a bundled Ghostscript (`gs`) binary.
   - Text Recognition (OCR): Handled by shelling out to a bundled Tesseract (`tesseract`) binary.
   - Security (Encryption/Decryption): Handled by shelling out to a bundled `qpdf` binary.
-  - Local AI Assistant: Handled by shelling out to a bundled `llama-server` (llama.cpp) binary.
+  - Local AI Assistant: Handled by dynamic download of `llama-server` and GGUF models to `app_data_dir`, executed via `app.shell().command()`.
 - **Inter-process Communication (IPC):** Tauri Commands. The frontend interacts via typed wrappers in `src/lib/invoke.ts`.
+- **Auto-Updater:** Native Tauri 2.x updater configured via GitHub Pages (`leonsalner.github.io/pdftoolkit/update.json`) and cryptographically signed.
 - **File System & Storage:** Files are read/written using `@tauri-apps/plugin-dialog` and `@tauri-apps/plugin-fs`. Preferences are persisted globally via `@tauri-apps/plugin-store`.
-- **Sidecars:** External binaries (`gs`, `tesseract`, `qpdf`, `llama-server`) and language data (`tessdata`) are fetched via `setup_env.sh` and physically bundled into the app via Tauri's `externalBin` and `resources` arrays, executed securely using `@tauri-apps/plugin-shell`.
+- **Sidecars:** External binaries (`gs`, `tesseract`, `qpdf`) and language data (`tessdata`) are fetched via `setup_env.sh` and physically bundled into the app via Tauri's `externalBin` and `resources` arrays, executed securely using `@tauri-apps/plugin-shell`. `llama-server` is NO LONGER a sidecar.
 
 ## Build & Development Commands
 - Fetch dependencies & bundle sidecars: `./setup_env.sh`

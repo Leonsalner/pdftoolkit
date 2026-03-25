@@ -1,7 +1,7 @@
-use serde::Serialize;
-use tauri_plugin_shell::ShellExt;
 use crate::utils::paths::{get_output_dir, output_filename};
 use crate::utils::validation::validate_pdf;
+use serde::Serialize;
+use tauri_plugin_shell::ShellExt;
 
 #[derive(Serialize)]
 pub struct MergeResult {
@@ -10,7 +10,12 @@ pub struct MergeResult {
 }
 
 #[tauri::command]
-pub async fn merge_pdfs(app: tauri::AppHandle, file_paths: Vec<String>, output_name: Option<String>, absolute_output_path: Option<String>) -> Result<MergeResult, String> {
+pub async fn merge_pdfs(
+    app: tauri::AppHandle,
+    file_paths: Vec<String>,
+    output_name: Option<String>,
+    absolute_output_path: Option<String>,
+) -> Result<MergeResult, String> {
     if file_paths.is_empty() {
         return Err("No files provided for merging".to_string());
     }
@@ -39,7 +44,9 @@ pub async fn merge_pdfs(app: tauri::AppHandle, file_paths: Vec<String>, output_n
 
     // Audit: Check if output file already exists
     if output_path.exists() {
-        return Err("Output file already exists. Please choose a different name or location.".to_string());
+        return Err(
+            "Output file already exists. Please choose a different name or location.".to_string(),
+        );
     }
 
     let output_str = output_path.to_string_lossy().to_string();
@@ -56,7 +63,9 @@ pub async fn merge_pdfs(app: tauri::AppHandle, file_paths: Vec<String>, output_n
         args.push(path.clone());
     }
 
-    let output = app.shell().sidecar("gs")
+    let output = app
+        .shell()
+        .sidecar("gs")
         .map_err(|e| format!("Failed to initialize Ghostscript sidecar: {}", e))?
         .args(args)
         .output()
@@ -65,7 +74,9 @@ pub async fn merge_pdfs(app: tauri::AppHandle, file_paths: Vec<String>, output_n
 
     if !output.status.success() {
         // Audit: Sanitize error
-        return Err("Merge failed. One or more documents might be corrupted or protected.".to_string());
+        return Err(
+            "Merge failed. One or more documents might be corrupted or protected.".to_string(),
+        );
     }
 
     Ok(MergeResult {

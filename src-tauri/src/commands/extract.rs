@@ -1,7 +1,7 @@
-use serde::Serialize;
-use lopdf::Document;
 use crate::utils::paths::{get_output_dir, output_filename};
 use crate::utils::validation::validate_pdf;
+use lopdf::Document;
+use serde::Serialize;
 
 #[derive(Serialize)]
 pub struct ExtractResult {
@@ -18,7 +18,13 @@ pub async fn get_pdf_page_count(input_path: String) -> Result<u32, String> {
 }
 
 #[tauri::command]
-pub async fn extract_pages(app: tauri::AppHandle, input_path: String, ranges: String, output_name: Option<String>, absolute_output_path: Option<String>) -> Result<ExtractResult, String> {
+pub async fn extract_pages(
+    app: tauri::AppHandle,
+    input_path: String,
+    ranges: String,
+    output_name: Option<String>,
+    absolute_output_path: Option<String>,
+) -> Result<ExtractResult, String> {
     // Audit: Validate input PDF
     validate_pdf(&input_path)?;
     let mut doc = Document::load(&input_path).map_err(|e| format!("Failed to read PDF: {}", e))?;
@@ -26,19 +32,27 @@ pub async fn extract_pages(app: tauri::AppHandle, input_path: String, ranges: St
 
     let mut pages_to_keep = Vec::new();
     let parts = ranges.split(',');
-    
+
     for part in parts {
         let part = part.trim();
-        if part.is_empty() { continue; }
+        if part.is_empty() {
+            continue;
+        }
 
         if part.contains('-') {
             let bounds: Vec<&str> = part.split('-').collect();
             if bounds.len() != 2 {
                 return Err(format!("Invalid range '{}': Invalid format", part));
             }
-            let start = bounds[0].trim().parse::<u32>().map_err(|_| format!("Invalid range '{}': Not a number", part))?;
-            let end = bounds[1].trim().parse::<u32>().map_err(|_| format!("Invalid range '{}': Not a number", part))?;
-            
+            let start = bounds[0]
+                .trim()
+                .parse::<u32>()
+                .map_err(|_| format!("Invalid range '{}': Not a number", part))?;
+            let end = bounds[1]
+                .trim()
+                .parse::<u32>()
+                .map_err(|_| format!("Invalid range '{}': Not a number", part))?;
+
             if start < 1 || start > total_pages || end < 1 || end > total_pages || start > end {
                 return Err(format!("Invalid range '{}': Out of bounds", part));
             }
@@ -46,7 +60,9 @@ pub async fn extract_pages(app: tauri::AppHandle, input_path: String, ranges: St
                 pages_to_keep.push(p);
             }
         } else {
-            let p = part.parse::<u32>().map_err(|_| format!("Invalid range '{}': Not a number", part))?;
+            let p = part
+                .parse::<u32>()
+                .map_err(|_| format!("Invalid range '{}': Not a number", part))?;
             if p < 1 || p > total_pages {
                 return Err(format!("Invalid range '{}': Out of bounds", part));
             }
@@ -62,14 +78,14 @@ pub async fn extract_pages(app: tauri::AppHandle, input_path: String, ranges: St
     }
 
     let doc_pages = doc.get_pages();
-    
+
     let mut pages_to_delete = Vec::new();
     for (page_num, _) in doc_pages.iter() {
         if !pages_to_keep.contains(page_num) {
             pages_to_delete.push(*page_num);
         }
     }
-    
+
     doc.delete_pages(&pages_to_delete);
 
     let output_path = if let Some(abs_path) = absolute_output_path {
@@ -91,15 +107,18 @@ pub async fn extract_pages(app: tauri::AppHandle, input_path: String, ranges: St
         };
         out_dir.join(file_name)
     };
-    
+
     // Audit: Check if output file already exists
     if output_path.exists() {
-        return Err("Output file already exists. Please choose a different name or location.".to_string());
+        return Err(
+            "Output file already exists. Please choose a different name or location.".to_string(),
+        );
     }
 
     let output_str = output_path.to_string_lossy().to_string();
 
-    doc.save(&output_path).map_err(|e| format!("Failed to write output: {}", e))?;
+    doc.save(&output_path)
+        .map_err(|e| format!("Failed to write output: {}", e))?;
 
     Ok(ExtractResult {
         output_path: output_str,

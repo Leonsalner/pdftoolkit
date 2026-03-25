@@ -46,12 +46,6 @@ if ! command -v qpdf >/dev/null 2>&1; then
     brew install qpdf
 fi
 
-if ! command -v llama-server >/dev/null 2>&1; then
-    echo "llama.cpp not found! Attempting to install via Homebrew..."
-    command -v brew >/dev/null 2>&1 || { echo >&2 "brew is required to install llama.cpp. Aborting."; exit 1; }
-    brew install llama.cpp
-fi
-
 echo "All required dependencies are installed locally."
 
 # 3. Create Sidecar directories
@@ -82,13 +76,6 @@ echo "Bundling qpdf from $QPDF_PATH..."
 rm -f "src-tauri/bin/qpdf-$TARGET"
 cp "$QPDF_PATH" "src-tauri/bin/qpdf-$TARGET"
 chmod +x "src-tauri/bin/qpdf-$TARGET"
-
-# 6c. Copy llama-server executable
-LLAMA_PATH=$(command -v llama-server)
-echo "Bundling llama-server from $LLAMA_PATH..."
-rm -f "src-tauri/bin/llama-server-$TARGET"
-cp "$LLAMA_PATH" "src-tauri/bin/llama-server-$TARGET"
-chmod +x "src-tauri/bin/llama-server-$TARGET"
 
 # 7. Copy Tesseract language data (tessdata)
 # Finding tessdata path. On Homebrew, it's usually at $(brew --prefix tesseract)/share/tessdata

@@ -1,8 +1,8 @@
-use serde::Serialize;
-use tauri_plugin_shell::ShellExt;
-use tauri::Manager;
-use crate::utils::validation::{validate_pdf, validate_ocr_lang};
 use crate::utils::paths::{get_output_dir, output_filename};
+use crate::utils::validation::{validate_ocr_lang, validate_pdf};
+use serde::Serialize;
+use tauri::Manager;
+use tauri_plugin_shell::ShellExt;
 
 #[derive(Serialize)]
 pub struct OcrResult {
@@ -10,24 +10,31 @@ pub struct OcrResult {
 }
 
 #[tauri::command]
-pub async fn extract_text_ocr(app: tauri::AppHandle, input_path: String, lang: String) -> Result<OcrResult, String> {
+pub async fn extract_text_ocr(
+    app: tauri::AppHandle,
+    input_path: String,
+    lang: String,
+) -> Result<OcrResult, String> {
     // Audit: Validate input PDF
     validate_pdf(&input_path)?;
-    
+
     // Audit: Validate language
     validate_ocr_lang(&lang)?;
 
-    let timestamp = std::time::UNIX_EPOCH.elapsed()
+    let timestamp = std::time::UNIX_EPOCH
+        .elapsed()
         .map_err(|e| format!("System time error: {}", e))?
         .as_millis();
-        
+
     let temp_dir = std::env::temp_dir().join(format!("pdf_toolkit_ocr_{}", timestamp));
     std::fs::create_dir_all(&temp_dir).map_err(|e| format!("Failed to create temp dir: {}", e))?;
 
     let png_pattern = temp_dir.join("page_%03d.png").to_string_lossy().to_string();
-    
+
     // 1. Ghostscript extraction to PNGs
-    let gs_output = app.shell().sidecar("gs")
+    let gs_output = app
+        .shell()
+        .sidecar("gs")
         .map_err(|e| format!("Failed to initialize Ghostscript sidecar: {}", e))?
         .args([
             "-dNOPAUSE",
@@ -44,31 +51,43 @@ pub async fn extract_text_ocr(app: tauri::AppHandle, input_path: String, lang: S
     if !gs_output.status.success() {
         // Audit: Sanitize error
         let _ = std::fs::remove_dir_all(&temp_dir);
-        return Err("Failed to convert PDF to images. The document might be corrupted or protected.".to_string());
+        return Err(
+            "Failed to convert PDF to images. The document might be corrupted or protected."
+                .to_string(),
+        );
     }
 
     let entries = std::fs::read_dir(&temp_dir)
         .map_err(|_| "Failed to read processing directory".to_string())?;
-        
+
     let mut paths: Vec<_> = entries.filter_map(|e| e.ok()).map(|e| e.path()).collect();
     paths.sort();
 
     let mut full_text = String::new();
-    
+
     // Tesseract requires TESSDATA_PREFIX to be the parent of tessdata
-    let resource_dir = app.path().resource_dir().map_err(|_| "Internal application error".to_string())?;
+    let resource_dir = app
+        .path()
+        .resource_dir()
+        .map_err(|_| "Internal application error".to_string())?;
 
     for png_path in paths {
         let temp_txt_base = temp_dir.join("temp_ocr").to_string_lossy().to_string();
         let temp_txt_full = temp_dir.join("temp_ocr.txt");
 
-        let tess_output = app.shell().sidecar("tesseract")
+        let tess_output = app
+            .shell()
+            .sidecar("tesseract")
             .map_err(|e| format!("Failed to initialize Text Recognition: {}", e))?
-            .env("TESSDATA_PREFIX", resource_dir.to_string_lossy().to_string())
+            .env(
+                "TESSDATA_PREFIX",
+                resource_dir.to_string_lossy().to_string(),
+            )
             .args([
                 &png_path.to_string_lossy().to_string(),
                 &temp_txt_base,
-                "-l", &lang,
+                "-l",
+                &lang,
             ])
             .output()
             .await
@@ -90,9 +109,7 @@ pub async fn extract_text_ocr(app: tauri::AppHandle, input_path: String, lang: S
         return Err("No text was found in the document.".to_string());
     }
 
-    Ok(OcrResult {
-        text: full_text,
-    })
+    Ok(OcrResult { text: full_text })
 }
 
 #[derive(Serialize)]
@@ -112,16 +129,19 @@ pub async fn make_searchable_pdf(
     validate_pdf(&input_path)?;
     validate_ocr_lang(&lang)?;
 
-    let timestamp = std::time::UNIX_EPOCH.elapsed()
+    let timestamp = std::time::UNIX_EPOCH
+        .elapsed()
         .map_err(|e| format!("System time error: {}", e))?
         .as_millis();
-        
+
     let temp_dir = std::env::temp_dir().join(format!("pdf_toolkit_searchable_{}", timestamp));
     std::fs::create_dir_all(&temp_dir).map_err(|e| format!("Failed to create temp dir: {}", e))?;
 
     let png_pattern = temp_dir.join("page_%03d.png").to_string_lossy().to_string();
-    
-    let gs_output = app.shell().sidecar("gs")
+
+    let gs_output = app
+        .shell()
+        .sidecar("gs")
         .map_err(|e| format!("Failed to initialize Ghostscript sidecar: {}", e))?
         .args([
             "-dNOPAUSE",
@@ -137,31 +157,46 @@ pub async fn make_searchable_pdf(
 
     if !gs_output.status.success() {
         let _ = std::fs::remove_dir_all(&temp_dir);
-        return Err("Failed to convert PDF to images. The document might be corrupted or protected.".to_string());
+        return Err(
+            "Failed to convert PDF to images. The document might be corrupted or protected."
+                .to_string(),
+        );
     }
 
     let entries = std::fs::read_dir(&temp_dir)
         .map_err(|_| "Failed to read processing directory".to_string())?;
-        
+
     let mut paths: Vec<_> = entries.filter_map(|e| e.ok()).map(|e| e.path()).collect();
     paths.sort();
 
-    let resource_dir = app.path().resource_dir().map_err(|_| "Internal application error".to_string())?;
+    let resource_dir = app
+        .path()
+        .resource_dir()
+        .map_err(|_| "Internal application error".to_string())?;
     let mut pdf_paths = Vec::new();
 
     for png_path in &paths {
         let stem = png_path.file_stem().unwrap().to_string_lossy();
-        let temp_pdf_base = temp_dir.join(format!("{}_stem", stem)).to_string_lossy().to_string();
+        let temp_pdf_base = temp_dir
+            .join(format!("{}_stem", stem))
+            .to_string_lossy()
+            .to_string();
         let temp_pdf_full = temp_dir.join(format!("{}_stem.pdf", stem));
 
-        let tess_output = app.shell().sidecar("tesseract")
+        let tess_output = app
+            .shell()
+            .sidecar("tesseract")
             .map_err(|e| format!("Failed to initialize Text Recognition: {}", e))?
-            .env("TESSDATA_PREFIX", resource_dir.to_string_lossy().to_string())
+            .env(
+                "TESSDATA_PREFIX",
+                resource_dir.to_string_lossy().to_string(),
+            )
             .args([
                 &png_path.to_string_lossy().to_string(),
                 &temp_pdf_base,
-                "-l", &lang,
-                "pdf"
+                "-l",
+                &lang,
+                "pdf",
             ])
             .output()
             .await
@@ -201,7 +236,9 @@ pub async fn make_searchable_pdf(
 
     if output_path.exists() {
         let _ = std::fs::remove_dir_all(&temp_dir);
-        return Err("Output file already exists. Please choose a different name or location.".to_string());
+        return Err(
+            "Output file already exists. Please choose a different name or location.".to_string(),
+        );
     }
 
     let output_str = output_path.to_string_lossy().to_string();
@@ -216,7 +253,9 @@ pub async fn make_searchable_pdf(
 
     gs_args.extend(pdf_paths);
 
-    let gs_merge_output = app.shell().sidecar("gs")
+    let gs_merge_output = app
+        .shell()
+        .sidecar("gs")
         .map_err(|e| format!("Failed to initialize Ghostscript sidecar: {}", e))?
         .args(gs_args)
         .output()

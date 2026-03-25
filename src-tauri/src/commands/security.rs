@@ -1,7 +1,7 @@
-use serde::Serialize;
-use tauri_plugin_shell::ShellExt;
 use crate::utils::paths::{get_output_dir, output_filename};
 use crate::utils::validation::validate_pdf;
+use serde::Serialize;
+use tauri_plugin_shell::ShellExt;
 
 #[derive(Serialize)]
 pub struct SecurityResult {
@@ -24,7 +24,11 @@ pub async fn add_pdf_security(
     let out_dir = get_output_dir(&app)?;
     let output_path = out_dir.join(match output_name {
         Some(name) if !name.trim().is_empty() => {
-            if name.to_lowercase().ends_with(".pdf") { name } else { format!("{}.pdf", name) }
+            if name.to_lowercase().ends_with(".pdf") {
+                name
+            } else {
+                format!("{}.pdf", name)
+            }
         }
         _ => output_filename(&input_path, "secured"),
     });
@@ -35,18 +39,14 @@ pub async fn add_pdf_security(
 
     let output_str = output_path.to_string_lossy().to_string();
 
-    let mut args = vec![
-        input_path,
-        output_str.clone(),
-        "--encrypt".to_string(),
-    ];
+    let mut args = vec![input_path, output_str.clone(), "--encrypt".to_string()];
 
     // User password (to open)
     args.push(user_password.unwrap_or_else(|| "".to_string()));
-    
+
     // Owner password (to change permissions)
     args.push(owner_password.unwrap_or_else(|| "owner".to_string()));
-    
+
     // Key length
     args.push("256".to_string());
 
@@ -63,7 +63,9 @@ pub async fn add_pdf_security(
 
     args.push("--".to_string());
 
-    let output = app.shell().sidecar("qpdf")
+    let output = app
+        .shell()
+        .sidecar("qpdf")
         .map_err(|e| format!("Failed to initialize qpdf sidecar: {}", e))?
         .args(args)
         .output()
@@ -92,14 +94,20 @@ pub async fn decrypt_pdf(
     let out_dir = get_output_dir(&app)?;
     let output_path = out_dir.join(match output_name {
         Some(name) if !name.trim().is_empty() => {
-            if name.to_lowercase().ends_with(".pdf") { name } else { format!("{}.pdf", name) }
+            if name.to_lowercase().ends_with(".pdf") {
+                name
+            } else {
+                format!("{}.pdf", name)
+            }
         }
         _ => output_filename(&input_path, "decrypted"),
     });
 
     let output_str = output_path.to_string_lossy().to_string();
 
-    let output = app.shell().sidecar("qpdf")
+    let output = app
+        .shell()
+        .sidecar("qpdf")
         .map_err(|e| format!("Failed to initialize qpdf sidecar: {}", e))?
         .args([
             &format!("--password={}", password),
@@ -123,6 +131,7 @@ pub async fn decrypt_pdf(
 #[tauri::command]
 pub async fn check_pdf_encrypted(input_path: String) -> Result<bool, String> {
     validate_pdf(&input_path)?;
-    let doc = lopdf::Document::load(&input_path).map_err(|e| format!("Failed to load PDF: {}", e))?;
+    let doc =
+        lopdf::Document::load(&input_path).map_err(|e| format!("Failed to load PDF: {}", e))?;
     Ok(doc.is_encrypted())
 }

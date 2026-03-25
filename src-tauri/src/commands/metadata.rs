@@ -1,6 +1,6 @@
-use serde::Serialize;
-use lopdf::{Document, Object, StringFormat, Dictionary};
 use crate::utils::paths::{get_output_dir, output_filename};
+use lopdf::{Dictionary, Document, Object, StringFormat};
+use serde::Serialize;
 
 #[derive(Serialize)]
 pub struct PdfMetadata {
@@ -76,17 +76,26 @@ pub async fn set_pdf_metadata(
 
     if let Some(Object::Dictionary(dict)) = doc.objects.get_mut(&info_id) {
         if !title.is_empty() {
-            dict.set("Title", Object::String(title.into_bytes(), StringFormat::Literal));
+            dict.set(
+                "Title",
+                Object::String(title.into_bytes(), StringFormat::Literal),
+            );
         } else {
             dict.remove(b"Title");
         }
         if !author.is_empty() {
-            dict.set("Author", Object::String(author.into_bytes(), StringFormat::Literal));
+            dict.set(
+                "Author",
+                Object::String(author.into_bytes(), StringFormat::Literal),
+            );
         } else {
             dict.remove(b"Author");
         }
         if !subject.is_empty() {
-            dict.set("Subject", Object::String(subject.into_bytes(), StringFormat::Literal));
+            dict.set(
+                "Subject",
+                Object::String(subject.into_bytes(), StringFormat::Literal),
+            );
         } else {
             dict.remove(b"Subject");
         }
@@ -108,17 +117,23 @@ pub async fn set_pdf_metadata(
         };
         let output_path = out_dir.join(file_name);
         if output_path.exists() {
-            return Err("Output file already exists. Please choose a different name or location.".to_string());
+            return Err(
+                "Output file already exists. Please choose a different name or location."
+                    .to_string(),
+            );
         }
-        doc.save(&output_path).map_err(|e| format!("Failed to save PDF: {}", e))?;
+        doc.save(&output_path)
+            .map_err(|e| format!("Failed to save PDF: {}", e))?;
         Ok(MetadataResult {
             output_path: output_path.to_string_lossy().to_string(),
             overwritten: false,
         })
     } else {
         let tmp_path = format!("{}.tmp", input_path);
-        doc.save(&tmp_path).map_err(|e| format!("Failed to save temporary PDF: {}", e))?;
-        std::fs::rename(&tmp_path, &input_path).map_err(|e| format!("Failed to overwrite original file: {}", e))?;
+        doc.save(&tmp_path)
+            .map_err(|e| format!("Failed to save temporary PDF: {}", e))?;
+        std::fs::rename(&tmp_path, &input_path)
+            .map_err(|e| format!("Failed to overwrite original file: {}", e))?;
         Ok(MetadataResult {
             output_path: input_path,
             overwritten: true,

@@ -2,13 +2,18 @@ import { useState, useEffect } from 'react';
 import { open } from '@tauri-apps/plugin-dialog';
 import { useI18n } from '../lib/i18n';
 import { initStore } from '../lib/store';
-import { FolderOpen, Palette, Globe, HardDrive } from 'lucide-react';
+import { FolderOpen, Palette, Globe, HardDrive, RefreshCw } from 'lucide-react';
+import { check } from '@tauri-apps/plugin-updater';
+import { relaunch } from '@tauri-apps/plugin-process';
 
 export function SettingsPage() {
   const { lang, setLang, t } = useI18n();
   const [outputDir, setOutputDir] = useState<string>('');
   const [askEveryTime, setAskEveryTime] = useState<boolean>(false);
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
+  
+  const [updateStatus, setUpdateStatus] = useState<string>('Check for Updates');
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
 
   useEffect(() => {
     async function loadSettings() {
@@ -60,6 +65,28 @@ export function SettingsPage() {
     }
   };
 
+  const handleCheckUpdate = async () => {
+    setIsCheckingUpdate(true);
+    setUpdateStatus('Checking...');
+    try {
+      const update = await check();
+      if (update) {
+        setUpdateStatus(`Downloading v${update.version}...`);
+        await update.downloadAndInstall();
+        setUpdateStatus('Restarting...');
+        await relaunch();
+      } else {
+        setUpdateStatus('You are up to date!');
+        setTimeout(() => setUpdateStatus('Check for Updates'), 3000);
+      }
+    } catch (e) {
+      console.error(e);
+      setUpdateStatus('Update failed.');
+      setTimeout(() => setUpdateStatus('Check for Updates'), 3000);
+    }
+    setIsCheckingUpdate(false);
+  };
+
   return (
     <div className="max-w-3xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-500 h-full overflow-y-auto">
       <div className="mb-10 border-b border-[var(--border)] pb-6">
@@ -68,6 +95,31 @@ export function SettingsPage() {
       </div>
 
       <div className="space-y-10">
+        {/* Updates */}
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <RefreshCw size={18} className="text-[var(--text-secondary)]" />
+            <h3 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wider">Updates</h3>
+          </div>
+          <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-hidden shadow-sm">
+            <div className="p-5 flex justify-between items-center hover:bg-[var(--bg-elevated)] transition-colors">
+              <div className="pr-4">
+                <label className="text-sm font-medium text-[var(--text-primary)] block mb-1">
+                  Application Updates
+                </label>
+                <p className="text-xs text-[var(--text-secondary)]">Check for the latest version of PDF Toolkit.</p>
+              </div>
+              <button
+                onClick={handleCheckUpdate}
+                disabled={isCheckingUpdate}
+                className="px-4 py-2 border border-[var(--border)] rounded-lg shadow-sm text-sm font-medium text-[var(--text-primary)] bg-[var(--bg-surface)] hover:bg-[var(--bg-elevated)] transition-colors disabled:opacity-50"
+              >
+                {updateStatus}
+              </button>
+            </div>
+          </div>
+        </section>
+
         {/* File Handling */}
         <section>
           <div className="flex items-center gap-2 mb-4">

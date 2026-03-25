@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useI18n } from '../lib/i18n';
-import { getAiSpecs, checkModelExists, downloadModel, startAiServer, stopAiServer, SystemSpecs } from '../lib/invoke';
+import { getAiSpecs, checkModelExists, checkAiToolsExists, downloadModel, downloadAiTools, startAiServer, stopAiServer, SystemSpecs } from '../lib/invoke';
 import { invoke } from '@tauri-apps/api/core';
 import { DropZone } from '../components/DropZone';
 import { Page } from '../components/Sidebar';
@@ -14,8 +14,13 @@ interface Message {
 export function AiPage({}: { notify: (m: string, s: Page) => void; isActive: boolean }) {
   const { t } = useI18n();
   const [specs, setSpecs] = useState<SystemSpecs | null>(null);
+  
   const [modelExists, setModelExists] = useState(false);
+  const [toolsExist, setToolsExist] = useState(false);
+  
   const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadStep, setDownloadStep] = useState('');
+  
   const [isServerRunning, setIsServerRunning] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   
@@ -34,8 +39,10 @@ export function AiPage({}: { notify: (m: string, s: Page) => void; isActive: boo
       try {
         const s = await getAiSpecs();
         setSpecs(s);
-        const exists = await checkModelExists(s.recommended_model);
-        setModelExists(exists);
+        const mExists = await checkModelExists(s.recommended_model);
+        setModelExists(mExists);
+        const tExists = await checkAiToolsExists();
+        setToolsExist(tExists);
       } catch (e) {
         console.error(e);
       }
@@ -54,12 +61,24 @@ export function AiPage({}: { notify: (m: string, s: Page) => void; isActive: boo
   const handleDownload = async () => {
     if (!specs) return;
     setIsDownloading(true);
+    
     try {
-      await downloadModel(specs.model_url, specs.recommended_model);
-      setModelExists(true);
+      if (!toolsExist) {
+        setDownloadStep('Downloading AI Tools (~25MB)...');
+        await downloadAiTools();
+        setToolsExist(true);
+      }
+      
+      if (!modelExists) {
+        setDownloadStep(`Downloading Model (${specs.recommended_model})... This may take a while.`);
+        await downloadModel(specs.model_url, specs.recommended_model);
+        setModelExists(true);
+      }
     } catch (e) {
       alert(`Download failed: ${e}`);
     }
+    
+    setDownloadStep('');
     setIsDownloading(false);
   };
 
@@ -173,20 +192,25 @@ export function AiPage({}: { notify: (m: string, s: Page) => void; isActive: boo
             </div>
           )}
 
-          {!modelExists ? (
-            <button
-              onClick={handleDownload}
-              disabled={isDownloading}
-              className={`w-full py-4 px-6 rounded-xl font-semibold transition-all duration-300 shadow-sm flex justify-center items-center gap-2 ${
-                isDownloading
-                  ? 'bg-[var(--bg-elevated)] text-[var(--text-disabled)] border border-[var(--border)] cursor-not-allowed'
-                  : 'bg-[var(--text-primary)] text-[var(--bg-base)] hover:bg-[var(--text-secondary)] active:scale-[0.99]'
-              }`}
-            >
-              {isDownloading ? (
-                <>{t('ai.downloading')} <div className="ml-2 w-4 h-4 border-2 border-[var(--text-disabled)] border-t-transparent rounded-full animate-spin" /></>
-              ) : t('ai.download')}
-            </button>
+          {(!modelExists || !toolsExist) ? (
+            <div className="w-full">
+              <button
+                onClick={handleDownload}
+                disabled={isDownloading}
+                className={`w-full py-4 px-6 rounded-xl font-semibold transition-all duration-300 shadow-sm flex justify-center items-center gap-2 ${
+                  isDownloading
+                    ? 'bg-[var(--bg-elevated)] text-[var(--text-disabled)] border border-[var(--border)] cursor-not-allowed'
+                    : 'bg-[var(--text-primary)] text-[var(--bg-base)] hover:bg-[var(--text-secondary)] active:scale-[0.99]'
+                }`}
+              >
+                {isDownloading ? (
+                  <>{t('ai.downloading')} <div className="ml-2 w-4 h-4 border-2 border-[var(--text-disabled)] border-t-transparent rounded-full animate-spin" /></>
+                ) : 'Download AI Tools & Model'}
+              </button>
+              {isDownloading && downloadStep && (
+                <p className="text-xs text-[var(--text-secondary)] mt-3 animate-pulse">{downloadStep}</p>
+              )}
+            </div>
           ) : (
             <button
               onClick={handleStart}

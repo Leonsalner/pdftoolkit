@@ -114,7 +114,9 @@ export interface SystemSpecs {
 
 export const getAiSpecs = () => invoke<SystemSpecs>('get_ai_specs');
 export const checkModelExists = (modelName: string) => invoke<boolean>('check_model_exists', { modelName });
+export const checkAiToolsExists = () => invoke<boolean>('check_ai_tools_exists');
 export const downloadModel = (url: string, modelName: string) => invoke<string>('download_model', { url, modelName });
+export const downloadAiTools = () => invoke<string>('download_ai_tools');
 export const startAiServer = (modelName: string) => invoke<void>('start_ai_server', { modelName });
 export const stopAiServer = () => invoke<void>('stop_ai_server');
 

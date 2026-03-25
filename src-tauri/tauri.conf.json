@@ -23,14 +23,20 @@
       "csp": "default-src 'self'; img-src 'self' asset: data: https:; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://localhost:*;"
     }
   },
+  "plugins": {
+    "updater": {
+      "endpoints": ["https://leonsalner.github.io/pdftoolkit/update.json"],
+      "pubkey": "UPDATE_PUBKEY_PLACEHOLDER",
+      "dialog": false
+    }
+  },
   "bundle": {
     "active": true,
     "targets": "all",
     "externalBin": [
       "bin/gs",
       "bin/tesseract",
-      "bin/qpdf",
-      "bin/llama-server"
+      "bin/qpdf"
     ],
     "resources": [
       "tessdata/*"

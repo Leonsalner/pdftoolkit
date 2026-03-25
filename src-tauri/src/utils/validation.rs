@@ -1,6 +1,6 @@
-use std::path::Path;
 use std::fs::File;
 use std::io::Read;
+use std::path::Path;
 
 /// Validates that a file exists and has the %PDF- magic number.
 pub fn validate_pdf<P: AsRef<Path>>(path: P) -> Result<(), String> {
@@ -11,7 +11,8 @@ pub fn validate_pdf<P: AsRef<Path>>(path: P) -> Result<(), String> {
 
     let mut file = File::open(path).map_err(|e| format!("Failed to open file: {}", e))?;
     let mut header = [0u8; 5];
-    file.read_exact(&mut header).map_err(|_| "Not a valid PDF file (too small)".to_string())?;
+    file.read_exact(&mut header)
+        .map_err(|_| "Not a valid PDF file (too small)".to_string())?;
 
     if &header != b"%PDF-" {
         return Err("File is not a valid PDF document".to_string());
@@ -24,7 +25,10 @@ pub fn validate_pdf<P: AsRef<Path>>(path: P) -> Result<(), String> {
 pub fn validate_ocr_lang(lang: &str) -> Result<(), String> {
     let supported = ["eng", "slk", "ces"];
     if !supported.contains(&lang) {
-        return Err(format!("Unsupported OCR language: {}. Supported: eng, slk, ces", lang));
+        return Err(format!(
+            "Unsupported OCR language: {}. Supported: eng, slk, ces",
+            lang
+        ));
     }
     Ok(())
 }

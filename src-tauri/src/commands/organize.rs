@@ -38,8 +38,7 @@ pub async fn generate_page_thumbnails(
         .as_millis();
     let temp_dir = std::env::temp_dir().join(format!("pdf_toolkit_thumbs_{}", timestamp));
 
-    fs::create_dir_all(&temp_dir)
-        .map_err(|e| format!("Failed to create temp directory: {}", e))?;
+    fs::create_dir_all(&temp_dir).map_err(|e| format!("Failed to create temp directory: {}", e))?;
 
     let mut thumbnails = Vec::new();
 
@@ -69,15 +68,12 @@ pub async fn generate_page_thumbnails(
 
         if !output.status.success() {
             let _ = fs::remove_dir_all(&temp_dir);
-            return Err(format!(
-                "Ghostscript failed for page {}",
-                page_num
-            ));
+            return Err(format!("Ghostscript failed for page {}", page_num));
         }
 
         if output_file.exists() {
-            let bytes = fs::read(&output_file)
-                .map_err(|e| format!("Failed to read thumbnail: {}", e))?;
+            let bytes =
+                fs::read(&output_file).map_err(|e| format!("Failed to read thumbnail: {}", e))?;
             let b64_data = BASE64_STANDARD.encode(&bytes);
             thumbnails.push(ThumbnailData {
                 page_number: *page_num,
@@ -102,8 +98,7 @@ pub async fn save_organized_pdf(
     absolute_output_path: Option<String>,
 ) -> Result<OrganizeResult, String> {
     validate_pdf(&input_path)?;
-    let mut doc = Document::load(&input_path)
-        .map_err(|e| format!("Failed to read PDF: {}", e))?;
+    let mut doc = Document::load(&input_path).map_err(|e| format!("Failed to read PDF: {}", e))?;
 
     let page_map = doc.get_pages();
 
@@ -115,7 +110,9 @@ pub async fn save_organized_pdf(
             if let Some(&obj_id) = page_map.get(&page_num) {
                 if let Ok(obj) = doc.get_object_mut(obj_id) {
                     if let lopdf::Object::Dictionary(ref mut dict) = obj {
-                        let current = dict.get(b"Rotate").ok()
+                        let current = dict
+                            .get(b"Rotate")
+                            .ok()
                             .and_then(|r| r.as_i64().ok())
                             .unwrap_or(0) as i32;
                         let delta = *rotation;
@@ -133,13 +130,15 @@ pub async fn save_organized_pdf(
         .collect();
 
     // Traverse: Trailer → /Root (Catalog) → /Pages (page tree root)
-    let catalog_id = doc.trailer
+    let catalog_id = doc
+        .trailer
         .get(b"Root")
         .and_then(|r| r.as_reference())
         .map_err(|_| "Failed to find /Root in PDF trailer".to_string())?;
 
     let pages_id = {
-        let catalog_obj = doc.objects
+        let catalog_obj = doc
+            .objects
             .get(&catalog_id)
             .ok_or_else(|| "Catalog object not found".to_string())?;
         match catalog_obj {
@@ -156,7 +155,10 @@ pub async fn save_organized_pdf(
         pages_dict.set(
             "Kids",
             lopdf::Object::Array(
-                page_order_ids.iter().map(|id| lopdf::Object::Reference(*id)).collect(),
+                page_order_ids
+                    .iter()
+                    .map(|id| lopdf::Object::Reference(*id))
+                    .collect(),
             ),
         );
         pages_dict.set("Count", lopdf::Object::Integer(page_order.len() as i64));
@@ -180,7 +182,9 @@ pub async fn save_organized_pdf(
     };
 
     if output_path.exists() {
-        return Err("Output file already exists. Please choose a different name or location.".to_string());
+        return Err(
+            "Output file already exists. Please choose a different name or location.".to_string(),
+        );
     }
 
     let output_str = output_path.to_string_lossy().to_string();
