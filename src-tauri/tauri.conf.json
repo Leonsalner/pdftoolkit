@@ -26,7 +26,7 @@
   "plugins": {
     "updater": {
       "endpoints": ["https://leonsalner.github.io/pdftoolkit/update.json"],
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDZEQTlDOEJBODJDNjIzM0UKUldRK0k4YUN1c2lwYmRsR09ES1VLUVJ5c3h2VmMxVmtYNE41Y0d1eTAwaUFKUmdlT1U2Z08xWUUK,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDZEQTlDOEJBODJDNjIzM0UKUldRK0k4YUN1c2lwYmRsR09ES1VLUVJ5c3h2VmMxVmtYNE41Y0d1eTAwaUFKUmdlT1U2Z08xWUUK",
       "dialog": false
     }
   },
