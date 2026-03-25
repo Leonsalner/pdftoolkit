@@ -67,7 +67,7 @@ export function Sidebar({ activePage, onNavigate }: SidebarProps) {
       <div className="p-4 border-b border-[var(--border)] transition-colors duration-300">
         <h1 className="text-lg font-bold text-[var(--text-primary)] flex items-baseline space-x-2">
           <span>{t('app.title')}</span>
-          <span className="text-[10px] font-normal text-[var(--text-disabled)] uppercase tracking-wider">v2.0</span>
+          <span className="text-[10px] font-normal text-[var(--text-disabled)] uppercase tracking-wider">v2.1.1</span>
         </h1>
       </div>
       
