@@ -18,15 +18,29 @@
 - **Digital Signatures**: Sign documents locally using PKCS#12 certificates or eID.
 - **Arc/Linear UI Overhaul**: Full premium UI with category-tinting, Lucide icons, and animations.
 
-## High Priority (V2.1 - Next Steps)
-- **Advanced Batch Processing** (Diff: 5/10)
-  - Process multiple files for Watermarking and Security.
-- **Image Stamping** (Diff: 4/10)
-  - Allow using images for Watermarks.
+## Current Progress (V2.2) - 🚧 In Development
+- **Image Stamping**: Allow using images for Watermarks.
+- **Advanced Batch Processing**: Process multiple files for Watermarking and Security.
+- **Remove Blank Pages**: Automatically detect and remove blank pages from a PDF.
+- **PDF Flattening**: Flatten annotations, forms, and interactive elements into static content.
+
+## High Priority (V2.3 - Next Steps)
 - **Improved AI Parsing** (Diff: 7/10)
   - Improve the prompt context loading strategy for massive PDFs to bypass token limits.
+- **Extract Images from PDF** (Diff: 5/10)
+  - Extract embedded image assets (JPEGs, PNGs) from the document in their original resolution.
+- **Form Data Extraction** (Diff: 6/10)
+  - Read a PDF with fillable forms (AcroForms/XFA) and export data as CSV/JSON.
+
+## Planned
+- **Document Library / History**
+  - Track processed files, operations, timestamps, and output paths.
+  - Browse and reopen history per tool with search and date/tool/filename filtering.
 
 ## Theoretically Possible (Long-term)
+- **PDF Repair / Recovery Tool** (Diff: 7/10)
+  - Reconstruct corrupted, malformed, or truncated PDF files.
 - **PDF to DOCX Reconstruction** (Diff: 9/10)
+  - Convert PDF back into an editable Word document while preserving layout/styling.
 - **True Redaction Tool** (Diff: 10/10)
-- **Form Data Extraction** (Diff: 7/10)
+  - Permanently remove underlying text/data streams beneath redaction boxes.

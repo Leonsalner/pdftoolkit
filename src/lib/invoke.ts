@@ -166,6 +166,58 @@ export const addTextWatermark = (
   inputPath, text, pages, fontSize, opacity, rotation, color, outputName 
 });
 
+export const addImageWatermark = (
+  inputPath: string,
+  imagePath: string,
+  pages: string | undefined,
+  scale: number,
+  opacity: number,
+  rotation: number,
+  outputName?: string
+) => invoke<WatermarkResult>('add_image_watermark', { 
+  inputPath, imagePath, pages, scale, opacity, rotation, outputName 
+});
+
+export interface CleanResult {
+  output_path: string;
+  original_pages: number;
+  pages_removed: number;
+}
+
+export interface FlattenResult {
+  output_path: string;
+}
+
+export const removeBlankPages = (inputPath: string, outputName?: string) =>
+  invoke<CleanResult>('remove_blank_pages', { inputPath, outputName });
+
+export const flattenPdf = (inputPath: string, outputName?: string) =>
+  invoke<FlattenResult>('flatten_pdf', { inputPath, outputName });
+
+export interface RepairResult {
+  output_path: string;
+  method_used: string;
+}
+
+export const repairPdf = (inputPath: string, outputName?: string) =>
+  invoke<RepairResult>('repair_pdf', { inputPath, outputName });
+
+export interface FormDataResult {
+  output_path: string;
+  field_count: number;
+}
+
+export interface ExtractImagesResult {
+  output_dir: string;
+  images_extracted: number;
+}
+
+export const extractFormData = (inputPath: string, outputName?: string) =>
+  invoke<FormDataResult>('extract_form_data', { inputPath, outputName });
+
+export const extractPdfImages = (inputPath: string, outputFolderName?: string) =>
+  invoke<ExtractImagesResult>('extract_pdf_images', { inputPath, outputFolderName });
+
 export const getPdfMetadata = (inputPath: string) =>
   invoke<PdfMetadata>('get_pdf_metadata', { inputPath });
 

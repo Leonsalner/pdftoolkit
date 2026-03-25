@@ -1,8 +1,12 @@
 import { useState } from 'react';
+import { Loader2, FileText, Search, Globe, Cpu } from 'lucide-react';
 import { DropZone } from '../components/DropZone';
+import { PageIntro } from '../components/PageIntro';
+import { RecentFiles } from '../components/RecentFiles';
 import { ResultBanner } from '../components/ResultBanner';
 import { BatchFileList, type BatchFile } from '../components/BatchFileList';
 import { invoke } from '@tauri-apps/api/core';
+import { useRecentFiles } from '../hooks/useRecentFiles';
 import { useI18n } from '../lib/i18n';
 import { writeTextFile } from '@tauri-apps/plugin-fs';
 import { save } from '@tauri-apps/plugin-dialog';
@@ -27,6 +31,7 @@ export function OcrPage({ notify, isActive }: OcrPageProps) {
   const [ocrLang, setOcrLang] = useState('eng');
   const [ocrMode, setOcrMode] = useState<'extract' | 'searchable'>('extract');
   const [isProcessing, setIsProcessing] = useState(false);
+  const { recentFiles, addRecentFile } = useRecentFiles('ocr');
 
   const pendingCount = files.filter((f) => f.status === 'pending').length;
   const doneCount = files.filter((f) => f.status === 'done').length;
@@ -62,7 +67,7 @@ export function OcrPage({ notify, isActive }: OcrPageProps) {
 
   const handleProcessAll = async () => {
     setIsProcessing(true);
-    let doneCount = 0;
+    let successCount = 0;
 
     for (const file of files.filter((f) => f.status === 'pending')) {
       setFiles((prev) =>
@@ -72,6 +77,7 @@ export function OcrPage({ notify, isActive }: OcrPageProps) {
       try {
         if (ocrMode === 'searchable') {
           const result = await makeSearchablePdf(file.path, ocrLang);
+          await addRecentFile(file.path, file.name);
           setFiles((prev) =>
             prev.map((f) =>
               f.id === file.id
@@ -81,6 +87,7 @@ export function OcrPage({ notify, isActive }: OcrPageProps) {
           );
         } else {
           const result = await extractTextOcr(file.path, ocrLang);
+          await addRecentFile(file.path, file.name);
           setFiles((prev) =>
             prev.map((f) =>
               f.id === file.id
@@ -89,7 +96,7 @@ export function OcrPage({ notify, isActive }: OcrPageProps) {
             )
           );
         }
-        doneCount++;
+        successCount++;
       } catch (err) {
         setFiles((prev) =>
           prev.map((f) =>
@@ -103,7 +110,7 @@ export function OcrPage({ notify, isActive }: OcrPageProps) {
 
     setIsProcessing(false);
 
-    if (doneCount > 0 && !isActive) {
+    if (successCount > 0 && !isActive) {
       notify(ocrMode === 'searchable' ? t('ocr.searchableSuccess') : t('ocr.success'), 'ocr');
     }
   };
@@ -125,117 +132,163 @@ export function OcrPage({ notify, isActive }: OcrPageProps) {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-500 h-full overflow-y-auto">
-      <div className="mb-8 border-b border-[var(--border)] pb-6">
-        <h2 className="text-2xl font-semibold text-[var(--text-primary)]">{t('ocr.title')}</h2>
-        <p className="text-sm text-[var(--text-secondary)] mt-1">{t('ocr.desc')}</p>
-      </div>
+    <div className="max-w-5xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-400 ease-out h-full overflow-y-auto">
+      <PageIntro page="ocr" title={t('ocr.title')} description={t('ocr.desc')} />
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 xl:gap-12">
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_2fr] gap-8 xl:gap-10">
         {/* Left Column: File Selection */}
         <div className="space-y-6">
-          <div className="flex justify-between items-end mb-3">
-            <h3 className="text-sm font-medium text-[var(--text-primary)]">
-              {files.length === 0 ? t('common.step1') : t('common.step1.add')}
-            </h3>
-            {files.length > 0 && (
-              <button
-                onClick={handleClearAll}
-                disabled={isProcessing}
-                className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-              >
-                {t('batch.clearAll')}
-              </button>
+          <div>
+            <div className="flex justify-between items-end mb-3">
+              <h3 className="text-sm font-medium text-[var(--text-primary)]">
+                {files.length === 0 ? t('common.step1') : t('common.step1.add')}
+              </h3>
+              {files.length > 0 && (
+                <button
+                  onClick={handleClearAll}
+                  disabled={isProcessing}
+                  className="text-xs text-[var(--text-secondary)] hover:text-[var(--error)] transition-colors"
+                >
+                  {t('batch.clearAll')}
+                </button>
+              )}
+            </div>
+            
+            <DropZone onFileSelect={handleFileSelect} multiple />
+            {files.length === 0 && (
+              <RecentFiles
+                files={recentFiles}
+                onSelect={(path, name) => {
+                  handleFileSelect(path, name);
+                  void addRecentFile(path, name);
+                }}
+              />
             )}
           </div>
           
-          <DropZone onFileSelect={handleFileSelect} multiple />
-          
           {files.length > 0 && (
-            <div className="mt-6">
+            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
               <BatchFileList
                 files={files}
                 onRemove={handleRemove}
                 onSaveText={ocrMode === 'extract' ? handleSaveText : undefined}
                 t={t}
               />
-            </div>
-          )}
-
-          {files.length > 0 && (
-            <div className="text-sm text-[var(--text-disabled)] text-center pt-2">
-              {`${files.length} files | ${doneCount} done | ${errorCount} errors`}
+              <div className="mt-4 px-4 py-2 rounded-lg bg-[var(--bg-base)] border border-[var(--border)] flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-[var(--text-disabled)]">
+                <span>{files.length} Files</span>
+                <span className="flex gap-3">
+                  <span className="text-[var(--success)]">{doneCount} Done</span>
+                  <span className="text-[var(--error)]">{errorCount} Errors</span>
+                </span>
+              </div>
             </div>
           )}
         </div>
 
         {/* Right Column: Options & Processing */}
-        <div className={`space-y-8 transition-opacity duration-300 ${files.length > 0 ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
-          <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl p-6 shadow-sm space-y-6">
+        <div className={`space-y-5 transition-all duration-300 ${files.length > 0 ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-6 shadow-sm space-y-6">
             <div>
-              <h3 className="text-sm font-medium text-[var(--text-primary)] mb-3">{t('ocr.modeTitle')}</h3>
-              <div className="flex bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg p-1">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-disabled)] mb-3">
+                Recognition Mode
+              </p>
+              <div className="grid grid-cols-1 gap-3">
                 <button
                   onClick={() => setOcrMode('extract')}
-                  className={`flex-1 py-1.5 px-3 text-sm font-medium rounded-md transition-colors ${
+                  className={`flex items-center gap-4 p-4 rounded-xl border transition-all duration-200 text-left group ${
                     ocrMode === 'extract'
-                      ? 'bg-[var(--cat-intelligence-bg)] text-[var(--cat-intelligence)] shadow-sm border border-[var(--cat-intelligence)]/30'
-                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                      ? 'border-[var(--cat-intelligence)] bg-[var(--cat-intelligence-bg)] shadow-sm'
+                      : 'border-[var(--border)] bg-[var(--bg-base)] hover:border-[var(--border-hover)] hover:-translate-y-[1px]'
                   }`}
                 >
-                  {t('ocr.modeExtract')}
+                  <div className={`p-2 rounded-lg transition-colors ${ocrMode === 'extract' ? 'bg-[var(--cat-intelligence)] text-white' : 'bg-[var(--bg-elevated)] text-[var(--text-disabled)] group-hover:text-[var(--text-secondary)]'}`}>
+                    <FileText size={18} />
+                  </div>
+                  <div>
+                    <p className={`text-sm font-semibold ${ocrMode === 'extract' ? 'text-[var(--cat-intelligence)]' : 'text-[var(--text-primary)]'}`}>
+                      {t('ocr.modeExtract')}
+                    </p>
+                    <p className="text-xs text-[var(--text-secondary)] mt-0.5">Extract plain text to a separate file</p>
+                  </div>
                 </button>
+
                 <button
                   onClick={() => setOcrMode('searchable')}
-                  className={`flex-1 py-1.5 px-3 text-sm font-medium rounded-md transition-colors ${
+                  className={`flex items-center gap-4 p-4 rounded-xl border transition-all duration-200 text-left group ${
                     ocrMode === 'searchable'
-                      ? 'bg-[var(--cat-intelligence-bg)] text-[var(--cat-intelligence)] shadow-sm border border-[var(--cat-intelligence)]/30'
-                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                      ? 'border-[var(--cat-intelligence)] bg-[var(--cat-intelligence-bg)] shadow-sm'
+                      : 'border-[var(--border)] bg-[var(--bg-base)] hover:border-[var(--border-hover)] hover:-translate-y-[1px]'
                   }`}
                 >
-                  {t('ocr.modeSearchable')}
+                  <div className={`p-2 rounded-lg transition-colors ${ocrMode === 'searchable' ? 'bg-[var(--cat-intelligence)] text-white' : 'bg-[var(--bg-elevated)] text-[var(--text-disabled)] group-hover:text-[var(--text-secondary)]'}`}>
+                    <Search size={18} />
+                  </div>
+                  <div>
+                    <p className={`text-sm font-semibold ${ocrMode === 'searchable' ? 'text-[var(--cat-intelligence)]' : 'text-[var(--text-primary)]'}`}>
+                      {t('ocr.modeSearchable')}
+                    </p>
+                    <p className="text-xs text-[var(--text-secondary)] mt-0.5">Create a searchable PDF layer under the image</p>
+                  </div>
                 </button>
               </div>
             </div>
 
-            <div>
-              <h3 className="text-sm font-medium text-[var(--text-primary)] mb-3">{t('ocr.language')}</h3>
-              <select
-                value={ocrLang}
-                onChange={(e) => setOcrLang(e.target.value)}
-                className="block w-full rounded-md border-[var(--border)] bg-[var(--bg-elevated)] shadow-sm focus:border-[var(--text-secondary)] focus:ring-1 focus:ring-[var(--text-secondary)] sm:text-sm text-[var(--text-primary)] px-3 py-2 border outline-none transition-colors"
-              >
-                <option value="eng">English</option>
-                <option value="slk">Slovak</option>
-                <option value="ces">Czech</option>
-              </select>
+            <div className="border-t border-[var(--border)] pt-5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-disabled)] mb-1.5">{t('ocr.language')}</p>
+              <div className="relative group">
+                <select
+                  value={ocrLang}
+                  onChange={(e) => setOcrLang(e.target.value)}
+                  className="w-full appearance-none rounded-lg border border-[var(--border)] bg-[var(--bg-base)] pl-9 pr-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--border-hover)] focus:ring-1 focus:ring-[var(--text-secondary)]/20 transition-colors"
+                >
+                  <option value="eng">English</option>
+                  <option value="slk">Slovak</option>
+                  <option value="ces">Czech</option>
+                </select>
+                <Globe size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-disabled)]" />
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
+              <Cpu size={14} className="text-[var(--text-disabled)] mt-0.5" />
+              <p className="text-[10px] text-[var(--text-secondary)] leading-relaxed italic">
+                OCR is a CPU-intensive task. Processing large documents may take several minutes and will utilize all available system cores.
+              </p>
             </div>
           </div>
 
           <button
             onClick={handleProcessAll}
             disabled={pendingCount === 0 || isProcessing}
-            className={`w-full py-3.5 px-4 rounded-xl font-semibold transition-all duration-300 shadow-sm ${
+            className={`w-full rounded-xl py-3.5 px-4 text-sm font-semibold transition-all duration-200 shadow-sm ${
               pendingCount === 0 || isProcessing
                 ? 'bg-[var(--bg-elevated)] text-[var(--text-disabled)] border border-[var(--border)] cursor-not-allowed'
-                : 'bg-[var(--text-primary)] text-[var(--bg-base)] hover:bg-[var(--text-secondary)] active:scale-[0.99]'
+                : 'bg-[var(--text-primary)] text-[var(--bg-base)] hover:opacity-90 active:scale-[0.98]'
             }`}
           >
-            {isProcessing ? t('batch.processing') : t('batch.processAll')}
+            {isProcessing ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 size={15} className="animate-spin" /> {t('batch.processing')}
+              </span>
+            ) : t('batch.processAll')}
           </button>
 
           {files.length > 0 && doneCount > 0 && (
-            <ResultBanner
-              type="success"
-              message={ocrMode === 'searchable' ? t('ocr.searchableSuccess') : t('ocr.success')}
-            />
+            <div className="animate-in fade-in zoom-in-95 duration-300">
+              <ResultBanner
+                type="success"
+                message={ocrMode === 'searchable' ? t('ocr.searchableSuccess') : t('ocr.success')}
+              />
+            </div>
           )}
 
           {files.length > 0 && errorCount > 0 && (
-            <ResultBanner
-              type="error"
-              message={ocrMode === 'searchable' ? t('ocr.searchableFailed') : t('ocr.failed')}
-            />
+            <div className="animate-in fade-in zoom-in-95 duration-300">
+              <ResultBanner
+                type="error"
+                message={ocrMode === 'searchable' ? t('ocr.searchableFailed') : t('ocr.failed')}
+              />
+            </div>
           )}
         </div>
       </div>

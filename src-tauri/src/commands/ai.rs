@@ -207,6 +207,7 @@ pub async fn start_ai_server(
             "1024",
             "--threads",
             "4",
+            "--embedding",
         ])
         .spawn()
         .map_err(|e| format!("Failed to spawn AI server: {}", e))?;

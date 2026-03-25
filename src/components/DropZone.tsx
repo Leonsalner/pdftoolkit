@@ -63,16 +63,16 @@ export function DropZone({ onFileSelect, multiple = false }: DropZoneProps) {
 
   return (
     <div
-      className={`relative border border-dashed rounded-xl p-10 text-center transition-all duration-300 cursor-pointer ${
+      className={`relative cursor-pointer rounded-xl border border-dashed px-6 py-8 text-center transition-all duration-300 ${
         isHovered 
           ? 'border-[var(--text-secondary)] bg-[var(--bg-elevated)] scale-[1.01] shadow-sm' 
           : 'border-[var(--border)] hover:border-[var(--border-hover)] bg-[var(--bg-surface)] hover:bg-[var(--bg-elevated)]'
       }`}
       onClick={handleBrowse}
     >
-      <div className="flex flex-col items-center justify-center space-y-4">
+      <div className="flex flex-col items-center justify-center space-y-2">
         <UploadCloud 
-          size={40} 
+          size={32} 
           strokeWidth={1.5} 
           className={`transition-colors duration-300 ${isHovered ? 'text-[var(--text-primary)]' : 'text-[var(--text-disabled)]'}`} 
         />

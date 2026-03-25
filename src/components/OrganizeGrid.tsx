@@ -1,22 +1,22 @@
 import {
   DndContext,
   closestCenter,
+  DragEndEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
 } from '@dnd-kit/core';
 import {
-  arrayMove,
   SortableContext,
-  sortableKeyboardCoordinates,
+  arrayMove,
   rectSortingStrategy,
+  sortableKeyboardCoordinates,
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { Check, GripVertical, Plus, RotateCcw, RotateCw, Undo2, X } from 'lucide-react';
 import { ThumbnailMap } from '../hooks/useThumbnailLoader';
-import { RotateCcw, RotateCw, X, Undo2 } from 'lucide-react';
 
 export interface OrganizePage {
   pageNumber: number;
@@ -27,135 +27,199 @@ export interface OrganizePage {
 interface OrganizeGridProps {
   pages: OrganizePage[];
   thumbnails: ThumbnailMap;
+  bulkMode: boolean;
+  selectedPages: Set<number>;
+  zoomLevel: number;
   onReorder: (newOrder: OrganizePage[]) => void;
   onRotate: (pageNumber: number, direction: 'cw' | 'ccw') => void;
   onDelete: (pageNumber: number) => void;
+  onToggleSelect: (pageNumber: number) => void;
+  onThumbnailClick: (pageNumber: number) => void;
   t: (key: string) => string;
 }
 
 interface SortableItemProps {
   page: OrganizePage;
   thumbnail?: string;
+  bulkMode: boolean;
+  isSelected: boolean;
   onRotate: (direction: 'cw' | 'ccw') => void;
   onDelete: () => void;
+  onToggleSelect: () => void;
+  onThumbnailClick: () => void;
   t: (key: string) => string;
 }
 
-function SortableItem({ page, thumbnail, onRotate, onDelete, t }: SortableItemProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: page.pageNumber });
+function getGridClass(zoomLevel: number) {
+  if (zoomLevel <= 24) {
+    return 'grid-cols-3 md:grid-cols-4 xl:grid-cols-5';
+  }
+  if (zoomLevel >= 70) {
+    return 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3';
+  }
+  return 'grid-cols-2 md:grid-cols-3 xl:grid-cols-4';
+}
+
+function SortableItem({
+  page,
+  thumbnail,
+  bulkMode,
+  isSelected,
+  onRotate,
+  onDelete,
+  onToggleSelect,
+  onThumbnailClick,
+  t,
+}: SortableItemProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: page.pageNumber,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : page.deleted ? 0.5 : 1,
+    opacity: isDragging ? 0.6 : page.deleted ? 0.55 : 1,
   };
 
-  const rotationStyle = page.rotation !== 0
-    ? { transform: `rotate(${page.rotation}deg)` }
-    : {};
+  const rotationStyle = page.rotation !== 0 ? { transform: `rotate(${page.rotation}deg)` } : undefined;
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`relative aspect-[3/4] rounded-lg overflow-hidden bg-[var(--bg-surface)] border-2 transition-colors ${
-        page.deleted ? 'border-[var(--error)]' : 'border-[var(--border)]'
-      } ${isDragging ? 'z-50 shadow-xl' : ''}`}
-    >
+    <div ref={setNodeRef} style={style} className={`group ${isDragging ? 'z-50' : ''}`}>
       <div
-        {...attributes}
-        {...listeners}
-        className="absolute inset-0 cursor-grab active:cursor-grabbing"
+        onClick={() => (bulkMode ? onToggleSelect() : onThumbnailClick())}
+        className={`cursor-pointer rounded-xl border bg-[var(--bg-surface)] p-2 shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg ${
+          isSelected ? 'border-[var(--cat-documents)] shadow-md' : 'border-[var(--border)]'
+        }`}
       >
-        {thumbnail ? (
-          <img
-            src={`data:image/png;base64,${thumbnail}`}
-            alt={`Page ${page.pageNumber}`}
-            className="w-full h-full object-contain"
-            style={rotationStyle}
-          />
-        ) : (
-          <div className="w-full h-full bg-[var(--bg-elevated)] animate-pulse flex items-center justify-center">
-            <span className="text-[var(--text-disabled)] text-sm">{page.pageNumber}</span>
+        <div className="relative overflow-hidden rounded-lg border border-[var(--border)] bg-zinc-950">
+          <div className="aspect-[3/4] flex items-center justify-center bg-zinc-900">
+            {thumbnail ? (
+              <img
+                src={`data:image/png;base64,${thumbnail}`}
+                alt={`Page ${page.pageNumber}`}
+                className="h-full w-full object-contain"
+                style={rotationStyle}
+              />
+            ) : (
+              <span className="text-sm text-white/60">{t('organize.loadPages')}</span>
+            )}
           </div>
-        )}
-      </div>
 
-      {page.deleted && (
-        <div className="absolute inset-0 bg-[var(--bg-base)]/50 flex items-center justify-center">
-          <div className="text-[var(--error)] text-xs font-bold px-2 py-1 rounded transform -rotate-12 border border-[var(--error)] bg-[var(--error-bg)]">
-            {t('organize.preview.deleted')}
-          </div>
+          {!page.deleted && (
+            <button
+              {...attributes}
+              {...listeners}
+              type="button"
+              onClick={(e) => e.stopPropagation()}
+              className="absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-md bg-black/30 text-white/90 opacity-0 transition-opacity duration-150 group-hover:opacity-100 cursor-grab active:cursor-grabbing hover:bg-black/50"
+            >
+              <GripVertical size={14} />
+            </button>
+          )}
+
+          {page.deleted && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/55">
+              <div className="rounded-full border border-[var(--error)] bg-[var(--error-bg)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--error)]">
+                {t('organize.preview.deleted')}
+              </div>
+            </div>
+          )}
+
+          {bulkMode && !page.deleted && (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onToggleSelect();
+              }}
+              className={`absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full border text-white backdrop-blur ${
+                isSelected
+                  ? 'border-[var(--cat-documents)] bg-[var(--cat-documents)]'
+                  : 'border-white/25 bg-black/35'
+              }`}
+            >
+              {isSelected ? <Check size={14} /> : null}
+            </button>
+          )}
+
+          {!bulkMode && !page.deleted && (
+            <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onRotate('ccw');
+                }}
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-black/30 text-white/90 transition-colors hover:bg-black/50"
+                title={t('organize.rotateCCW')}
+              >
+                <RotateCcw size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onRotate('cw');
+                }}
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-black/30 text-white/90 transition-colors hover:bg-black/50"
+                title={t('organize.rotateCW')}
+              >
+                <RotateCw size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onDelete();
+                }}
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-black/30 text-white/90 transition-colors hover:bg-[var(--error)]"
+                title={t('organize.deletePage')}
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
+
+          {page.deleted && (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onDelete();
+              }}
+              className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/30 text-white/90 transition-colors hover:bg-black/50"
+            >
+              <Undo2 size={14} />
+            </button>
+          )}
         </div>
-      )}
 
-      <div className="absolute top-1.5 left-1.5 bg-[var(--bg-surface)]/80 backdrop-blur-sm text-[var(--text-primary)] text-xs font-medium px-2 py-0.5 rounded-md border border-[var(--border)] shadow-sm">
-        {page.pageNumber}
-      </div>
-
-      {!page.deleted && (
-        <div className="absolute bottom-1.5 right-1.5 flex gap-1.5">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onRotate('ccw');
-            }}
-            className="w-7 h-7 rounded-md bg-[var(--bg-surface)]/90 backdrop-blur-sm hover:bg-[var(--bg-elevated)] flex items-center justify-center text-[var(--text-secondary)] border border-[var(--border)] shadow-sm transition-colors"
-            title={t('organize.rotateCCW')}
-          >
-            <RotateCcw size={14} />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onRotate('cw');
-            }}
-            className="w-7 h-7 rounded-md bg-[var(--bg-surface)]/90 backdrop-blur-sm hover:bg-[var(--bg-elevated)] flex items-center justify-center text-[var(--text-secondary)] border border-[var(--border)] shadow-sm transition-colors"
-            title={t('organize.rotateCW')}
-          >
-            <RotateCw size={14} />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-            className="w-7 h-7 rounded-md flex items-center justify-center shadow-sm transition-colors border"
-            style={{ 
-              backgroundColor: 'var(--error-bg)', 
-              color: 'var(--error)',
-              borderColor: 'var(--error)' 
-            }}
-            title={t('organize.deletePage')}
-          >
-            <X size={14} />
-          </button>
+        <div className="mt-2 flex items-center justify-between gap-2 px-1">
+          <p className="text-sm font-medium text-[var(--text-primary)]">Page {page.pageNumber}</p>
+          {page.rotation !== 0 && (
+            <span className="rounded-full bg-[var(--bg-elevated)] px-1.5 py-0.5 text-[10px] text-[var(--text-secondary)]">
+              {page.rotation}°
+            </span>
+          )}
         </div>
-      )}
-
-      {page.deleted && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          className="absolute top-1.5 right-1.5 w-7 h-7 rounded-md bg-[var(--bg-surface)]/90 backdrop-blur-sm hover:bg-[var(--bg-elevated)] flex items-center justify-center text-[var(--text-primary)] border border-[var(--border)] shadow-sm transition-colors"
-        >
-          <Undo2 size={14} />
-        </button>
-      )}
+      </div>
     </div>
   );
 }
 
-export function OrganizeGrid({ pages, thumbnails, onReorder, onRotate, onDelete, t }: OrganizeGridProps) {
+export function OrganizeGrid({
+  pages,
+  thumbnails,
+  bulkMode,
+  selectedPages,
+  zoomLevel,
+  onReorder,
+  onRotate,
+  onDelete,
+  onToggleSelect,
+  onThumbnailClick,
+  t,
+}: OrganizeGridProps) {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -167,31 +231,41 @@ export function OrganizeGrid({ pages, thumbnails, onReorder, onRotate, onDelete,
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = pages.findIndex((p) => p.pageNumber === active.id);
-      const newIndex = pages.findIndex((p) => p.pageNumber === over.id);
-      const newPages = arrayMove(pages, oldIndex, newIndex);
-      onReorder(newPages);
+      const oldIndex = pages.findIndex((page) => page.pageNumber === active.id);
+      const newIndex = pages.findIndex((page) => page.pageNumber === over.id);
+      onReorder(arrayMove(pages, oldIndex, newIndex));
     }
   };
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-    >
-      <SortableContext items={pages.map((p) => p.pageNumber)} strategy={rectSortingStrategy}>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 p-4">
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={pages.map((page) => page.pageNumber)} strategy={rectSortingStrategy}>
+        <div className={`grid ${getGridClass(zoomLevel)} gap-5 p-5`}>
           {pages.map((page) => (
             <SortableItem
               key={page.pageNumber}
               page={page}
               thumbnail={thumbnails[page.pageNumber]}
-              onRotate={(dir) => onRotate(page.pageNumber, dir)}
+              bulkMode={bulkMode}
+              isSelected={selectedPages.has(page.pageNumber)}
+              onRotate={(direction) => onRotate(page.pageNumber, direction)}
               onDelete={() => onDelete(page.pageNumber)}
+              onToggleSelect={() => onToggleSelect(page.pageNumber)}
+              onThumbnailClick={() => onThumbnailClick(page.pageNumber)}
               t={t}
             />
           ))}
+
+          <button
+            type="button"
+            className="flex aspect-[3/4] flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-[var(--bg-elevated)] px-4 text-center text-[var(--text-secondary)] transition-colors hover:border-[var(--border-hover)]"
+          >
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm">
+              <Plus size={18} />
+            </div>
+            <p className="text-sm font-medium text-[var(--text-primary)]">{t('organize.insertPage')}</p>
+            <p className="mt-1 text-xs text-[var(--text-secondary)]">{t('organize.insertPageHint')}</p>
+          </button>
         </div>
       </SortableContext>
     </DndContext>

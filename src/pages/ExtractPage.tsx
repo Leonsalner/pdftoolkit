@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { DropZone } from '../components/DropZone';
+import { PageIntro } from '../components/PageIntro';
+import { RecentFiles } from '../components/RecentFiles';
 import { RangeInput } from '../components/RangeInput';
 import { ResultBanner } from '../components/ResultBanner';
 import { ThumbnailPickerModal, rangesToString } from '../components/ThumbnailPickerModal';
 import { useTauriCommand } from '../hooks/useTauriCommand';
+import { useRecentFiles } from '../hooks/useRecentFiles';
 import { extractPages, getPdfPageCount } from '../lib/invoke';
 import { useI18n } from '../lib/i18n';
 import { save } from '@tauri-apps/plugin-dialog';
@@ -23,6 +26,7 @@ export function ExtractPage({ notify, isActive }: ExtractPageProps) {
   const [rangeInput, setRangeInput] = useState('');
   const [askEveryTime, setAskEveryTime] = useState(false);
   const [showThumbnailPicker, setShowThumbnailPicker] = useState(false);
+  const { recentFiles, addRecentFile } = useRecentFiles('extract');
 
   const { execute: fetchPageCount, result: totalPages, error: pageCountError, reset: resetPageCount } = useTauriCommand(getPdfPageCount);
   const { execute: performExtract, result, error: extractError, loading, reset: resetExtract } = useTauriCommand(extractPages);
@@ -82,16 +86,16 @@ export function ExtractPage({ notify, isActive }: ExtractPageProps) {
     if (res && !isActive) {
       notify(t('extract.success'), 'extract');
     }
+    if (res && fileName) {
+      await addRecentFile(filePath, fileName);
+    }
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-500 h-full overflow-y-auto">
-      <div className="mb-8 border-b border-[var(--border)] pb-6">
-        <h2 className="text-2xl font-semibold text-[var(--text-primary)]">{t('extract.title')}</h2>
-        <p className="text-sm text-[var(--text-secondary)] mt-1">{t('extract.desc')}</p>
-      </div>
+    <div className="max-w-5xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-400 ease-out h-full overflow-y-auto">
+      <PageIntro page="extract" title={t('extract.title')} description={t('extract.desc')} />
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 xl:gap-12">
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_2fr] gap-8 xl:gap-10">
         {/* Left Column: Input */}
         <div className="space-y-6">
           <div>
@@ -110,7 +114,16 @@ export function ExtractPage({ notify, isActive }: ExtractPageProps) {
                 </button>
               </div>
             ) : (
-              <DropZone onFileSelect={handleFileSelect} />
+              <>
+                <DropZone onFileSelect={handleFileSelect} />
+                <RecentFiles
+                  files={recentFiles}
+                  onSelect={(path, name) => {
+                    handleFileSelect(path, name);
+                    void addRecentFile(path, name);
+                  }}
+                />
+              </>
             )}
             {pageCountError && <p className="mt-2 text-sm text-[var(--error)]">{pageCountError}</p>}
           </div>

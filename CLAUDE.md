@@ -1,13 +1,14 @@
-# Project Context: PDF Toolkit
+# Project Context: PDF Toolkit v3.0
 
 ## Overview
-PDF Toolkit is a local macOS desktop application for manipulating PDF files. 
+PDF Toolkit is a premium, local macOS desktop application for manipulating PDF files. 
+Version 3.0 introduces a comprehensive interior UI redesign for a more professional and consistent experience.
 It uses **Tauri 2.x**, **React 19**, **TypeScript**, **Tailwind CSS v4** (via Vite plugin), and **Rust**.
 
 ## Architecture & Tech Stack
-- **Frontend:** React (Vite template).
+- **Frontend:** React 19 (Vite template).
 - **Styling:** Tailwind CSS v4 using `@import "tailwindcss"` and custom variants in `src/styles/theme.css`. We use CSS custom properties for dark/light themes (`data-theme="dark"`).
-- **Localization:** Custom lightweight i18n context provider (`src/lib/i18n.tsx`) supporting English and Slovak.
+- **Localization:** Custom lightweight i18n context provider (`src/lib/i18n.tsx`) supporting English, Slovak, and Czech.
 - **Backend:** Rust (`src-tauri`).
   - PDF Extraction, Merging, & Splitting: Handled natively via the `lopdf` crate.
   - PDF Compression, Format Conversion, & OCR Image Extraction: Handled by shelling out to a bundled Ghostscript (`gs`) binary.

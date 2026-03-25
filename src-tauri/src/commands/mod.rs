@@ -1,11 +1,16 @@
 pub mod ai;
+pub mod clean;
 pub mod compress;
 pub mod convert;
 pub mod extract;
+pub mod flatten;
+pub mod forms;
+pub mod images;
 pub mod merge;
 pub mod metadata;
 pub mod ocr;
 pub mod organize;
+pub mod repair;
 pub mod security;
 pub mod sign;
 pub mod split;

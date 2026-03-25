@@ -4,8 +4,12 @@ import { CompressPage } from "./pages/CompressPage";
 import { ExtractPage } from "./pages/ExtractPage";
 import { MergePage } from "./pages/MergePage";
 import { SplitPage } from "./pages/SplitPage";
+import { HomePage } from "./pages/HomePage";
+import { LibraryPage } from "./pages/LibraryPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { OrganizePage } from "./pages/OrganizePage";
+import { CleanPage } from "./pages/CleanPage";
+import { FlattenPage } from "./pages/FlattenPage";
 import { initStore } from "./lib/store";
 import { OcrPage } from "./pages/OcrPage";
 import { ConvertPage } from "./pages/ConvertPage";
@@ -14,6 +18,9 @@ import { SecurityPage } from "./pages/SecurityPage";
 import { SignPage } from "./pages/SignPage";
 import { AiPage } from "./pages/AiPage";
 import { MetadataPage } from "./pages/MetadataPage";
+import { ExtractImagesPage } from "./pages/ExtractImagesPage";
+import { FormDataPage } from "./pages/FormDataPage";
+import { RepairPage } from "./pages/RepairPage";
 import { checkGhostscript } from "./lib/invoke";
 import { check } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
@@ -27,7 +34,7 @@ interface Toast {
 }
 
 function App() {
-  const [activePage, setActivePage] = useState<Page>("compress");
+  const [activePage, setActivePage] = useState<Page>("home");
   const [gsAvailable, setGsAvailable] = useState<boolean>(true);
   const [toast, setToast] = useState<Toast>({ visible: false, message: "", targetPage: null });
   const [isUpdating, setIsUpdating] = useState(false);
@@ -125,7 +132,7 @@ function App() {
   };
 
   const getPageClass = (page: Page) => 
-    `absolute inset-0 overflow-y-auto transition-opacity duration-300 ${
+    `absolute inset-0 overflow-y-auto transition-opacity duration-400 ease-out ${
       activePage === page ? "opacity-100 z-10 pointer-events-auto" : "opacity-0 z-0 pointer-events-none"
     }`;
 
@@ -134,6 +141,9 @@ function App() {
       <Sidebar activePage={activePage} onNavigate={setActivePage} />
       
       <main className="flex-1 overflow-hidden relative bg-[var(--bg-base)]">
+        <div className={getPageClass("home")}>
+          <HomePage onNavigate={setActivePage} />
+        </div>
         <div className={getPageClass("compress")}>
           <CompressPage gsAvailable={gsAvailable} notify={notify} isActive={activePage === "compress"} />
         </div>
@@ -149,14 +159,29 @@ function App() {
         <div className={getPageClass("organize")}>
           <OrganizePage gsAvailable={gsAvailable} notify={notify} isActive={activePage === "organize"} />
         </div>
+        <div className={getPageClass("clean")}>
+          <CleanPage gsAvailable={gsAvailable} notify={notify} isActive={activePage === "clean"} />
+        </div>
+        <div className={getPageClass("repair")}>
+          <RepairPage notify={notify} isActive={activePage === "repair"} />
+        </div>
+        <div className={getPageClass("flatten")}>
+          <FlattenPage notify={notify} isActive={activePage === "flatten"} />
+        </div>
         <div className={getPageClass("convert")}>
           <ConvertPage gsAvailable={gsAvailable} notify={notify} isActive={activePage === "convert"} />
+        </div>
+        <div className={getPageClass("extractImages")}>
+          <ExtractImagesPage notify={notify} isActive={activePage === "extractImages"} />
         </div>
         <div className={getPageClass("watermark")}>
           <WatermarkPage notify={notify} isActive={activePage === "watermark"} />
         </div>
         <div className={getPageClass("metadata")}>
           <MetadataPage notify={notify} isActive={activePage === "metadata"} />
+        </div>
+        <div className={getPageClass("forms")}>
+          <FormDataPage notify={notify} isActive={activePage === "forms"} />
         </div>
         <div className={getPageClass("security")}>
           <SecurityPage notify={notify} isActive={activePage === "security"} />
@@ -172,6 +197,9 @@ function App() {
         </div>
         <div className={getPageClass("settings")}>
           <SettingsPage />
+        </div>
+        <div className={getPageClass("library")}>
+          <LibraryPage />
         </div>
       </main>
 

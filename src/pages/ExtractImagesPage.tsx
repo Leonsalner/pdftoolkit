@@ -1,56 +1,30 @@
-import { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { Loader2, Image as ImageIcon, FolderPlus } from 'lucide-react';
 import { DropZone } from '../components/DropZone';
-import { PresetSelector } from '../components/PresetSelector';
 import { PageIntro } from '../components/PageIntro';
+import { RecentFiles } from '../components/RecentFiles';
 import { ResultBanner } from '../components/ResultBanner';
 import { BatchFileList, type BatchFile } from '../components/BatchFileList';
-import { RecentFiles } from '../components/RecentFiles';
-import { compressPdf, Preset, getFileSize } from '../lib/invoke';
-import { useI18n } from '../lib/i18n';
 import { useRecentFiles } from '../hooks/useRecentFiles';
+import { extractPdfImages } from '../lib/invoke';
+import { useI18n } from '../lib/i18n';
 import { Page } from '../components/Sidebar';
 
-interface CompressPageProps {
-  gsAvailable: boolean;
+interface ExtractImagesPageProps {
   notify: (message: string, sourcePage: Page) => void;
   isActive: boolean;
 }
 
-export function CompressPage({ gsAvailable, notify, isActive }: CompressPageProps) {
+export function ExtractImagesPage({ notify, isActive }: ExtractImagesPageProps) {
   const { t } = useI18n();
   const [files, setFiles] = useState<BatchFile[]>([]);
-  const [preset, setPreset] = useState<Preset>('ebook');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [estimatedInputBytes, setEstimatedInputBytes] = useState<number | null>(null);
-  const { recentFiles, addRecentFile } = useRecentFiles('compress');
+  const [outputFolderName, setOutputFolderName] = useState('');
+  const { recentFiles, addRecentFile } = useRecentFiles('extractImages');
 
   const pendingCount = files.filter((f) => f.status === 'pending').length;
   const doneCount = files.filter((f) => f.status === 'done').length;
   const errorCount = files.filter((f) => f.status === 'error').length;
-
-  useEffect(() => {
-    let active = true;
-    
-    async function updateSize() {
-      if (files.length === 0) {
-        setEstimatedInputBytes(null);
-        return;
-      }
-
-      try {
-        const sizes = await Promise.all(files.map(f => getFileSize(f.path)));
-        const total = sizes.reduce((acc, s) => acc + s, 0);
-        if (active) setEstimatedInputBytes(total);
-      } catch (err) {
-        console.error('Failed to get file sizes:', err);
-        if (active) setEstimatedInputBytes(null);
-      }
-    }
-
-    updateSize();
-    return () => { active = false; };
-  }, [files]);
 
   const handleAddFiles = (paths: string[], names: string[]) => {
     const remaining = 10 - files.length;
@@ -82,7 +56,7 @@ export function CompressPage({ gsAvailable, notify, isActive }: CompressPageProp
 
   const handleProcessAll = async () => {
     setIsProcessing(true);
-    let done = 0;
+    let successCount = 0;
 
     for (const file of files.filter((f) => f.status === 'pending')) {
       setFiles((prev) =>
@@ -90,16 +64,16 @@ export function CompressPage({ gsAvailable, notify, isActive }: CompressPageProp
       );
 
       try {
-        await compressPdf(file.path, preset);
+        const result = await extractPdfImages(file.path, outputFolderName || undefined);
         await addRecentFile(file.path, file.name);
         setFiles((prev) =>
           prev.map((f) =>
             f.id === file.id
-              ? { ...f, status: 'done' as const }
+              ? { ...f, status: 'done' as const, result }
               : f
           )
         );
-        done++;
+        successCount++;
       } catch (err) {
         setFiles((prev) =>
           prev.map((f) =>
@@ -113,21 +87,14 @@ export function CompressPage({ gsAvailable, notify, isActive }: CompressPageProp
 
     setIsProcessing(false);
 
-    if (done > 0 && !isActive) {
-      notify(t('compress.success'), 'compress');
+    if (successCount > 0 && !isActive) {
+      notify(t('extractImages.success'), 'extractImages');
     }
   };
 
   return (
     <div className="max-w-5xl mx-auto p-8 animate-in fade-in slide-in-from-bottom-2 duration-400 ease-out h-full overflow-y-auto">
-      <PageIntro page="compress" title={t('compress.title')} description={t('compress.desc')} />
-
-      {!gsAvailable && (
-        <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl text-amber-800 dark:text-amber-200">
-          <p className="font-semibold text-sm">{t('compress.gsRequired')}</p>
-          <p className="text-xs mt-1 opacity-90">{t('compress.gsInstall')}</p>
-        </div>
-      )}
+      <PageIntro page="extractImages" title={t('extractImages.title')} description={t('extractImages.desc')} />
 
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_2fr] gap-8 xl:gap-10">
         {/* Left Column: File Selection */}
@@ -178,20 +145,43 @@ export function CompressPage({ gsAvailable, notify, isActive }: CompressPageProp
         <div className={`space-y-5 transition-all duration-300 ${files.length > 0 ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-6 shadow-sm space-y-5">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-disabled)]">
-              {t('common.step2.preset')}
+              Extraction Options
             </p>
-            <PresetSelector
-              value={preset}
-              onChange={(p) => setPreset(p)}
-              fileSize={estimatedInputBytes}
-            />
+            
+            <div className="flex items-start gap-4 p-4 rounded-xl border border-[var(--cat-content)] bg-[var(--cat-content-bg)] mb-2">
+              <div className="p-2 rounded-lg bg-[var(--cat-content)] text-white shrink-0">
+                <ImageIcon size={18} />
+              </div>
+              <p className="text-xs text-[var(--text-primary)] leading-relaxed">
+                This tool extracts all high-resolution embedded images (JPEG, PNG, etc.) from the PDF. Images are saved in their original quality and format.
+              </p>
+            </div>
+
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-disabled)] mb-1.5">
+                Output Folder Name (Optional)
+              </p>
+              <div className="relative group">
+                <input
+                  type="text"
+                  value={outputFolderName}
+                  onChange={(e) => setOutputFolderName(e.target.value)}
+                  placeholder="e.g. document_images"
+                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg-base)] pl-9 pr-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-disabled)] outline-none focus:border-[var(--border-hover)] focus:ring-1 focus:ring-[var(--text-secondary)]/20 transition-colors"
+                />
+                <FolderPlus size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-disabled)] group-focus-within:text-[var(--text-secondary)] transition-colors" />
+              </div>
+              <p className="text-[10px] text-[var(--text-secondary)] mt-2 leading-relaxed">
+                Images will be saved to this subfolder in your output directory.
+              </p>
+            </div>
           </div>
 
           <button
             onClick={handleProcessAll}
-            disabled={pendingCount === 0 || !gsAvailable || isProcessing}
+            disabled={pendingCount === 0 || isProcessing}
             className={`w-full rounded-xl py-3.5 px-4 text-sm font-semibold transition-all duration-200 shadow-sm ${
-              pendingCount === 0 || !gsAvailable || isProcessing
+              pendingCount === 0 || isProcessing
                 ? 'bg-[var(--bg-elevated)] text-[var(--text-disabled)] border border-[var(--border)] cursor-not-allowed'
                 : 'bg-[var(--text-primary)] text-[var(--bg-base)] hover:opacity-90 active:scale-[0.98]'
             }`}
@@ -200,25 +190,25 @@ export function CompressPage({ gsAvailable, notify, isActive }: CompressPageProp
               <span className="flex items-center justify-center gap-2">
                 <Loader2 size={15} className="animate-spin" /> {t('batch.processing')}
               </span>
-            ) : t('batch.processAll')}
+            ) : t('extractImages.button')}
           </button>
 
-          {files.length > 0 && doneCount > 0 && (
+          {doneCount > 0 && (
             <div className="animate-in fade-in zoom-in-95 duration-300">
               <ResultBanner
                 type="success"
-                message={t('compress.success')}
-                details={`${doneCount} ${t('split.files')}`}
+                message="Images Extracted Successfully"
+                details={`${doneCount} files processed.`}
               />
             </div>
           )}
 
-          {files.length > 0 && errorCount > 0 && (
+          {errorCount > 0 && (
             <div className="animate-in fade-in zoom-in-95 duration-300">
               <ResultBanner
                 type="error"
-                message={t('compress.failed')}
-                details={`${errorCount} ${t('batch.status.error')}`}
+                message="Extraction Failed"
+                details={`${errorCount} files failed to process.`}
               />
             </div>
           )}
