@@ -149,9 +149,6 @@ export function Sidebar({ activePage, onNavigate }: SidebarProps) {
         <button onClick={() => onNavigate("home")} className="flex w-full items-center justify-between rounded-xl px-2 py-1 text-left transition-colors hover:bg-[var(--bg-elevated)]">
           <div>
             <p className="text-lg font-semibold tracking-tight text-[var(--text-primary)]">{t("app.title")}</p>
-            <p className="mt-0.5 text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--text-disabled)]">
-              v3.0
-            </p>
           </div>
           <House
             size={16}
