@@ -25,4 +25,9 @@ src-tauri/target/
 *.njsproj
 *.sln
 *.sw?
-\n# Release guides\nRELEASING.md
+# Release guides
+RELEASING.md
+
+# AI Output
+nanobanana-output/
+nanobanana_output/
