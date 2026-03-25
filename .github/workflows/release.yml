@@ -38,6 +38,7 @@ jobs:
         run: ./setup_env.sh
 
       - name: Build and Release Tauri app
+        id: tauri_build
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -50,3 +51,31 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+
+      - name: Update update.json on gh-pages
+        run: |
+          # Get version from package.json
+          VERSION=$(node -p "require('./package.json').version")
+          
+          # Find the .sig file content (it's generated in target/release/bundle/macos/...)
+          # Note: tauri-action puts artifacts in a predictable place.
+          SIG_FILE=$(find src-tauri/target/aarch64-apple-darwin/release/bundle/macos -name "*.app.tar.gz.sig" | head -n 1)
+          SIGNATURE=$(cat "$SIG_FILE")
+          
+          # Construct URL
+          URL="https://github.com/Leonsalner/pdftoolkit/releases/download/app-v${VERSION}/PDF_Toolkit_${VERSION}_aarch64.app.tar.gz"
+          
+          # Switch to temporary directory to handle gh-pages
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          mkdir -p ../gh-pages-tmp
+          cd ../gh-pages-tmp
+          git clone --depth 1 --branch gh-pages https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/Leonsalner/pdftoolkit.git . || (git init && git checkout -b gh-pages)
+          
+          # Create update.json
+          echo "{\"version\":\"$VERSION\",\"notes\":\"Maintenance and feature update.\",\"pub_date\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"platforms\":{\"darwin-aarch64\":{\"signature\":\"$SIGNATURE\",\"url\":\"$URL\"}}}" > update.json
+          
+          git add update.json
+          git commit -m "chore: update auto-updater metadata to v$VERSION"
+          git push origin gh-pages

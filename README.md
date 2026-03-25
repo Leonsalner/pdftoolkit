@@ -17,16 +17,15 @@ Built with Tauri 2.x, React, TypeScript, Rust, and Tailwind CSS v4.
 - **Watermarking** – Apply text stamps with customizable styling
 - **Security** – Encrypt with AES-256, set passwords and permissions
 - **Digital Signatures** – Sign documents with certificates or smart cards
-- **Local AI Assistant** – Chat with documents using an offline AI model
+- **Local AI Assistant** – Chat with documents using an offline AI model (downloaded on-demand)
+- **Auto-Updater** – Seamless background updates and one-click installs
 - **Multi-language UI** – English, Slovak, Czech with light/dark theme
 
 ## Installation
 
 1. Go to [Releases](https://github.com/Leonsalner/pdftoolkit/releases) and download the latest `.dmg` file
 2. Open the `.dmg` and drag **PDF Toolkit** to the **Applications** folder
-3. Open **PDF Toolkit** from Applications
-4. On first launch, macOS may block it. Go to **Settings → Privacy and Security**, scroll down, and click **"Open Anyway"**
-5. Done! The app is ready to use
+3. Done! The app will now automatically check for updates on launch.
 
 ## Development
 
@@ -43,8 +42,9 @@ npm run tauri build   # Build production DMG
 
 - `src/` – React frontend
 - `src-tauri/` – Rust backend with Tauri commands
-- `src-tauri/bin/` – Bundled external tools (Ghostscript, Tesseract, qpdf, llama.cpp)
+- `src-tauri/bin/` – Bundled external tools (Ghostscript, Tesseract, qpdf)
 - `src-tauri/tessdata/` – OCR language data
+- `llama-server` & Models – Downloaded dynamically to app data directory on-demand.
 
 ## Roadmap
 

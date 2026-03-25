@@ -1,6 +1,6 @@
 # PDF Toolkit: Comprehensive Releasing & Auto-Updater Guide
 
-This document explains how to build, sign, and release updates for PDF Toolkit, and how to manage the GitHub Pages update server.
+This document explains how to build, sign, and release updates for PDF Toolkit. The process is fully automated: pushing a version tag triggers a build, creates a GitHub Release, and updates the Auto-Updater metadata.
 
 ---
 
@@ -16,49 +16,32 @@ npx tauri signer generate -w ~/.tauri/pdf-toolkit.key
 
 ### B. Configure GitHub Secrets
 Go to your repo **Settings > Secrets and variables > Actions** and add:
-1. `TAURI_SIGNING_PRIVATE_KEY`: Your private key string.
-2. `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`: (Optional) The password if you set one during generation.
+1. `TAURI_SIGNING_PRIVATE_KEY`: Your private key string from Step A.
+2. `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`: (Optional) The password if you set one. Leave blank if you didn't.
 
 ### C. GitHub Actions Permissions
 Go to **Settings > Actions > General > Workflow permissions**.
-Select **Read and write permissions** so the build script can create Releases.
+Select **Read and write permissions** so the build script can create Releases and update the `gh-pages` branch.
 
 ---
 
-## 2. GitHub Pages: The Update Server
+## 2. Automated Update Server (gh-pages)
 
-To trigger updates for existing users, you need to host a single `update.json` file. The easiest way is using **GitHub Pages**.
-
-### A. Setup GitHub Pages
-1. Create a new branch named `gh-pages` (or use your `main` branch with a `/docs` folder).
-2. Ensure GitHub Pages is enabled in **Settings > Pages**.
-
-### B. The `update.json` Structure
-Place this file at the root of your `gh-pages` branch. The app is configured to look for it at: `https://leonsalner.github.io/pdftoolkit/update.json`
-
-```json
-{
-  "version": "2.1.0",
-  "notes": "Premium UI overhaul and Auto-Updater support!",
-  "pub_date": "2026-03-24T23:00:00Z",
-  "platforms": {
-    "darwin-aarch64": {
-      "signature": "CONTENT_OF_THE_SIG_FILE",
-      "url": "https://github.com/Leonsalner/pdftoolkit/releases/download/app-v2.1.0/PDF_Toolkit_2.1.0_aarch64.app.tar.gz"
-    }
-  }
-}
-```
+The app is configured to check `https://leonsalner.github.io/pdftoolkit/update.json`. 
+**You do not need to update this manually.** The GitHub Action handles this automatically by:
+1. Building the new version.
+2. Extracting the new cryptographic signature.
+3. Committing an updated `update.json` to the `gh-pages` branch.
 
 ---
 
 ## 3. The Release Workflow (How to push an update)
 
-Follow these steps exactly to release a new version (e.g., `v2.1.0`):
+Follow these steps to release a new version (e.g., `v2.1.0`):
 
 1. **Update Local Files**: 
-   - Change `"version": "2.1.0"` in `package.json`.
-   - Change `"version": "2.1.0"` in `src-tauri/tauri.conf.json`.
+   - Bump version in `package.json`.
+   - Bump version in `src-tauri/tauri.conf.json`.
 2. **Commit & Push**:
    ```bash
    git add .
@@ -70,20 +53,22 @@ Follow these steps exactly to release a new version (e.g., `v2.1.0`):
    git tag v2.1.0
    git push origin v2.1.0
    ```
-4. **GitHub Action**: 
-   - Pushing the tag triggers `.github/workflows/release.yml`.
-   - It will build the `.dmg` (for new users) and `.app.tar.gz` (for the updater).
-   - It will automatically create a **Draft Release** on GitHub.
-5. **Publish the Release**:
-   - Go to your GitHub Releases, edit the draft, and click **Publish**.
-6. **Trigger the Updater**:
-   - Download the `.sig` file that the GitHub Action attached to the release.
-   - Update your `update.json` file on the `gh-pages` branch with the new **version**, **url** of the `.tar.gz`, and the contents of the **.sig** file.
-   - As soon as you push the change to `update.json`, all current users will receive an "Update Available" notification in the app.
+4. **Sit back and relax**: 
+   - The GitHub Action builds the DMG and TAR.GZ.
+   - It creates a **Draft Release** (Go to GitHub > Releases to review and click "Publish").
+   - It automatically updates `update.json` on the `gh-pages` branch.
+   - Users will see the "Update Available" notification automatically.
 
 ---
 
-## 4. Troubleshooting
-- **Build Fails on Sidecars**: Ensure `setup_env.sh` is executable and valid. The GitHub Action runs this script to fetch Ghostscript/Tesseract before building.
-- **Update not triggering**: Ensure the `version` in `update.json` is strictly higher than the version currently installed on the user's machine.
-- **Signature Error**: Ensure the `pubkey` in `tauri.conf.json` matches the private key used by the GitHub Action.
+## 4. Final Setup Checklist
+
+Before your first release, check off these items:
+
+- [ ] **Signing Keys**: Generated via `npx tauri signer generate`.
+- [ ] **Public Key**: Added to `src-tauri/tauri.conf.json` -> `plugins.updater.pubkey`.
+- [ ] **Private Key**: Added to GitHub Secret `TAURI_SIGNING_PRIVATE_KEY`.
+- [ ] **Repo Secrets**: `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` added (even if empty).
+- [ ] **Permissions**: GitHub Actions "Workflow permissions" set to **Read and write**.
+- [ ] **Branch**: A `gh-pages` branch exists (create an empty one if not: `git checkout --orphan gh-pages && git rm -rf . && touch .nojekyll && git add . && git commit -m "init" && git push origin gh-pages`).
+- [ ] **Endpoint**: The URL in `tauri.conf.json` matches your GitHub Pages URL.
