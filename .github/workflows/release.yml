@@ -57,9 +57,13 @@ jobs:
           # Get version from package.json
           VERSION=$(node -p "require('./package.json').version")
           
-          # Find the .sig file content (it's generated in target/release/bundle/macos/...)
-          # Note: tauri-action puts artifacts in a predictable place.
-          SIG_FILE=$(find src-tauri/target/aarch64-apple-darwin/release/bundle/macos -name "*.app.tar.gz.sig" | head -n 1)
+          # Find the .sig file content
+          # Using a broader search as tauri-action pathing can vary
+          SIG_FILE=$(find src-tauri/target -name "*.app.tar.gz.sig" | head -n 1)
+          if [ -z "$SIG_FILE" ]; then
+            echo "Error: .sig file not found"
+            exit 1
+          fi
           SIGNATURE=$(cat "$SIG_FILE")
           
           # Construct URL
