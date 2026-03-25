@@ -1,74 +1,55 @@
-# PDF Toolkit: Comprehensive Releasing & Auto-Updater Guide
+# PDF Toolkit: Automated Releasing Guide (Mandatory GitHub Actions)
 
-This document explains how to build, sign, and release updates for PDF Toolkit. The process is fully automated: pushing a version tag triggers a build, creates a GitHub Release, and updates the Auto-Updater metadata.
-
----
-
-## 1. Prerequisites (One-Time Setup)
-
-### A. Generate Signing Keys
-Tauri requires signed updates. Run this in your terminal:
-```bash
-npx tauri signer generate -w ~/.tauri/pdf-toolkit.key
-```
-- **Public Key**: Copy this and paste it into `src-tauri/tauri.conf.json` under `plugins.updater.pubkey`.
-- **Private Key**: Keep this secret. You will need it for GitHub Actions.
-
-### B. Configure GitHub Secrets
-Go to your repo **Settings > Secrets and variables > Actions** and add:
-1. `TAURI_SIGNING_PRIVATE_KEY`: Your private key string from Step A.
-2. `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`: (Optional) The password if you set one. Leave blank if you didn't.
-
-### C. GitHub Actions Permissions
-Go to **Settings > Actions > General > Workflow permissions**.
-Select **Read and write permissions** so the build script can create Releases and update the `gh-pages` branch.
+The release process for PDF Toolkit is **fully automated and must be handled exclusively by GitHub Actions**. Manual release creation (via GitHub UI or `gh` CLI) is strictly forbidden as it bypasses the automated build, signing, and auto-updater metadata generation.
 
 ---
 
-## 2. Automated Update Server (gh-pages)
+## 1. The Automated Release Mandate
+All releases **MUST** be triggered by pushing a version tag. The GitHub Action workflow handles:
+- Cross-compiling for Apple Silicon (arm64).
+- Cryptographic signing of the application.
+- Generating the DMG and auto-updater artifacts.
+- Creating the GitHub Release (as a Draft).
+- Updating `update.json` on the `gh-pages` branch.
 
-The app is configured to check `https://leonsalner.github.io/pdftoolkit/update.json`. 
-**You do not need to update this manually.** The GitHub Action handles this automatically by:
-1. Building the new version.
-2. Extracting the new cryptographic signature.
-3. Committing an updated `update.json` to the `gh-pages` branch.
+**NEVER** use `gh release create` or the GitHub "Create a new release" button manually.
 
 ---
 
-## 3. The Release Workflow (How to push an update)
+## 2. Release Workflow (Triggering a Build)
 
-Follow these steps to release a new version (e.g., `v2.1.0`):
+To release version `v3.0.0`:
 
-1. **Update Local Files**: 
-   - Bump version in `package.json`.
-   - Bump version in `src-tauri/tauri.conf.json`.
-2. **Commit & Push**:
+1. **Update Version Strings**: Ensure `package.json`, `tauri.conf.json`, and `Cargo.toml` reflect the target version.
+2. **Commit Changes**:
    ```bash
    git add .
-   git commit -m "chore: bump version to 2.1.0"
+   git commit -m "chore: prepare release v3.0.0"
    git push origin main
    ```
-3. **Tag the Release**:
+3. **Trigger Deployment**: Push the version tag to GitHub.
    ```bash
-   git tag v2.1.0
-   git push origin v2.1.0
+   git tag v3.0.0
+   git push origin v3.0.0
    ```
-4. **Sit back and relax**: 
-   - The GitHub Action builds the DMG and TAR.GZ.
-   - It creates a **Draft Release** (Go to GitHub > Releases to review and click "Publish").
-   - It automatically updates `update.json` on the `gh-pages` branch.
-   - Users will see the "Update Available" notification automatically.
 
 ---
 
-## 4. Final Setup Checklist
+## 3. Finalizing the Release
 
-Before your first release, check off these items:
+Once the GitHub Action completes:
+1. Navigate to **GitHub > Releases**.
+2. Find the new **Draft** release created by the action.
+3. Review the artifacts and click **Publish release**.
+4. The auto-updater will now detect the update and notify users.
 
-- [ ] **Signing Keys**: Generated via `npx tauri signer generate`.
-- [ ] **Public Key**: Added to `src-tauri/tauri.conf.json` -> `plugins.updater.pubkey`.
-- [ ] **Private Key**: Added to GitHub Secret `TAURI_SIGNING_PRIVATE_KEY`.
-- [ ] **Repo Secrets**: `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` added (even if empty).
-- [ ] **Permissions**: GitHub Actions "Workflow permissions" set to **Read and write**.
-- [ ] **Branch**: A `gh-pages` branch exists (create an empty one if not: `git checkout --orphan gh-pages && git rm -rf . && touch .nojekyll && git add . && git commit -m "init" && git push origin gh-pages`).
-- [ ] **Endpoint**: The URL in `tauri.conf.json` matches your GitHub Pages URL.
+---
+
+## 4. Troubleshooting
+If a build fails or you need to re-trigger a release for the same version:
+1. Delete the tag locally and remotely:
+   ```bash
+   git tag -d v3.0.0
+   git push origin :refs/tags/v3.0.0
+   ```
+2. Re-create and re-push the tag as shown in Step 2.

@@ -17,6 +17,7 @@ It uses **Tauri 2.x**, **React 19**, **TypeScript**, **Tailwind CSS v4** (via Vi
   - Local AI Assistant: Handled by dynamic download of `llama-server` and GGUF models to `app_data_dir`, executed via `app.shell().command()`.
 - **Inter-process Communication (IPC):** Tauri Commands. The frontend interacts via typed wrappers in `src/lib/invoke.ts`.
 - **Auto-Updater:** Native Tauri 2.x updater configured via GitHub Pages (`leonsalner.github.io/pdftoolkit/update.json`) and cryptographically signed.
+- **Releasing:** **MUST** use GitHub Actions by pushing a version tag (e.g., `v3.0.0`). Manual release creation is forbidden. See `RELEASING.md` for details.
 - **File System & Storage:** Files are read/written using `@tauri-apps/plugin-dialog` and `@tauri-apps/plugin-fs`. Preferences are persisted globally via `@tauri-apps/plugin-store`.
 - **Sidecars:** External binaries (`gs`, `tesseract`, `qpdf`) and language data (`tessdata`) are fetched via `setup_env.sh` and physically bundled into the app via Tauri's `externalBin` and `resources` arrays, executed securely using `@tauri-apps/plugin-shell`. `llama-server` is NO LONGER a sidecar.
 
