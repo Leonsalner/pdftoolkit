@@ -18,7 +18,8 @@ fi
 if ! command -v npm >/dev/null 2>&1; then
     echo "npm not found! Attempting to install Node.js via Homebrew..."
     command -v brew >/dev/null 2>&1 || { echo >&2 "brew is required to install node. Aborting."; exit 1; }
-    brew install node
+    brew install node@24
+    brew link --force node@24
 fi
 
 if ! command -v rustc >/dev/null 2>&1; then
