@@ -50,7 +50,7 @@ jobs:
         with:
           tagName: app-v__VERSION__
           releaseName: 'PDF Toolkit v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
+          releaseBody: "## Installation\n**macOS users:** Download the **`.dmg`** file below to install.\n\n*(Note: The `.tar.gz`, `.sig`, and `.json` files are internal artifacts used by the auto-updater and can be safely ignored.)*"
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
@@ -69,8 +69,8 @@ jobs:
           fi
           SIGNATURE=$(cat "$SIG_FILE")
           
-          # Construct URL
-          URL="https://github.com/Leonsalner/pdftoolkit/releases/download/app-v${VERSION}/PDF_Toolkit_${VERSION}_aarch64.app.tar.gz"
+          # Construct URL based on actual uploaded artifact name format
+          URL="https://github.com/Leonsalner/pdftoolkit/releases/download/app-v${VERSION}/PDF.Toolkit_aarch64.app.tar.gz"
           
           # Switch to temporary directory to handle gh-pages
           git config --global user.name "github-actions[bot]"
