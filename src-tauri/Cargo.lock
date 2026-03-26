@@ -3142,6 +3142,7 @@ dependencies = [
  "tauri-plugin-shell",
  "tauri-plugin-store",
  "tauri-plugin-updater",
+ "uuid",
  "zip 2.4.2",
 ]
 

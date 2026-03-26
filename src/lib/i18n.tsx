@@ -272,7 +272,7 @@ const translations: Translations = {
     'convert.desc': 'Export PDF pages as high-quality PNG or JPEG images.',
     'watermark.desc': 'Stamp text across your PDF pages (like "CONFIDENTIAL" or "DRAFT").',
     'security.desc': 'Password-protect your PDFs or restrict printing and copying.',
-    'sign.desc': 'Add a verifiable digital signature to your PDF using a certificate or smart card.',
+    'sign.desc': 'Add a digital signature to your PDF using a certificate or smart card. (Coming Soon)',
     'ai.desc': 'Chat with your documents securely using a 100% offline AI.',
     'ocr.desc': 'Extract selectable text from scanned documents or images.',
     'organize.desc': 'Visually rearrange, rotate, or delete pages within your PDF.',

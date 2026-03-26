@@ -102,7 +102,7 @@ pub async fn add_text_watermark(
                 Operation::new("BT", vec![]),
                 Operation::new(
                     "Tf",
-                    vec![Object::Name(b"F1".to_vec()), Object::Real(font_size)],
+                    vec![Object::Name(b"F_PDFTK_WM".to_vec()), Object::Real(font_size)],
                 ),
                 {
                     let rad = rotation.to_radians();
@@ -163,7 +163,7 @@ pub async fn add_text_watermark(
                 res_dict.set("Font", Dictionary::new());
             }
             if let Ok(font_dict) = res_dict.get_mut(b"Font").and_then(|o| o.as_dict_mut()) {
-                font_dict.set("F1", Object::Reference(font_id));
+                font_dict.set("F_PDFTK_WM", Object::Reference(font_id));
             }
         }
 
@@ -325,7 +325,7 @@ pub async fn add_image_watermark(
         let content = Content {
             operations: vec![
                 Operation::new("q", vec![]),
-                Operation::new("gs", vec![Object::Name(b"GS1".to_vec())]),
+                Operation::new("gs", vec![Object::Name(b"GS_PDFTK_WM".to_vec())]),
                 Operation::new(
                     "cm",
                     vec![
@@ -337,7 +337,7 @@ pub async fn add_image_watermark(
                         Object::Real(height / 2.0 - (scaled_w * sin_a + scaled_h * cos_a) / 2.0),
                     ],
                 ),
-                Operation::new("Do", vec![Object::Name(b"Im1".to_vec())]),
+                Operation::new("Do", vec![Object::Name(b"Im_PDFTK_WM".to_vec())]),
                 Operation::new("Q", vec![]),
             ],
         };
@@ -367,14 +367,14 @@ pub async fn add_image_watermark(
                 res_dict.set("XObject", Dictionary::new());
             }
             if let Ok(xobj_dict) = res_dict.get_mut(b"XObject").and_then(|o| o.as_dict_mut()) {
-                xobj_dict.set("Im1", Object::Reference(image_id));
+                xobj_dict.set("Im_PDFTK_WM", Object::Reference(image_id));
             }
             
             if !res_dict.has(b"ExtGState") {
                 res_dict.set("ExtGState", Dictionary::new());
             }
             if let Ok(gs_dict) = res_dict.get_mut(b"ExtGState").and_then(|o| o.as_dict_mut()) {
-                gs_dict.set("GS1", Object::Reference(ext_gstate_id));
+                gs_dict.set("GS_PDFTK_WM", Object::Reference(ext_gstate_id));
             }
         }
 

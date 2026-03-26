@@ -1,4 +1,3 @@
-use crate::utils::paths::{get_output_dir, output_filename};
 use crate::utils::validation::validate_pdf;
 use pcsc::{Context, Protocols, Scope, ShareMode};
 use serde::Serialize;
@@ -48,30 +47,8 @@ pub async fn sign_pdf_file_based(
 ) -> Result<SignResult, String> {
     validate_pdf(&input_path)?;
 
-    // Note: Full cryptographic PDF signing involves complex byte-range hashing.
-    // For V2.0, we are laying the structural foundation.
-    // Implementing a full PKCS#7 signature injection from scratch in Rust
-    // requires significant boilerplate. We will use a simplified path for the prototype.
-
-    let out_dir = get_output_dir(&app)?;
-    let output_path = out_dir.join(match output_name {
-        Some(name) if !name.trim().is_empty() => {
-            if name.to_lowercase().ends_with(".pdf") {
-                name
-            } else {
-                format!("{}.pdf", name)
-            }
-        }
-        _ => output_filename(&input_path, "signed"),
-    });
-
     // In a real-world scenario, we'd use a crate like `endesive` or shell out to `openssl`
     // to perform the actual signing.
-    // For now, we simulate the success of the process for the UI flow.
-    std::fs::copy(&input_path, &output_path)
-        .map_err(|e| format!("Failed to create output: {}", e))?;
-
-    Ok(SignResult {
-        output_path: output_path.to_string_lossy().to_string(),
-    })
+    // For now, we explicitly inform the user that this feature is in preview.
+    Err("Digital signing is currently in preview and not yet implemented. No changes were made to your document.".to_string())
 }

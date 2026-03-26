@@ -45,7 +45,10 @@ pub async fn add_pdf_security(
     args.push(user_password.unwrap_or_else(|| "".to_string()));
 
     // Owner password (to change permissions)
-    args.push(owner_password.unwrap_or_else(|| "owner".to_string()));
+    let final_owner_pass = owner_password
+        .filter(|s| !s.trim().is_empty())
+        .unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
+    args.push(final_owner_pass);
 
     // Key length
     args.push("256".to_string());
