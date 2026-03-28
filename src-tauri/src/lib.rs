@@ -41,7 +41,6 @@ pub fn run() {
             commands::flatten::flatten_pdf,
             commands::clean::remove_blank_pages,
             commands::repair::repair_pdf,
-            commands::sign::detect_smart_cards,
             commands::sign::sign_pdf_file_based,
             commands::watermark::add_text_watermark,
             commands::watermark::add_image_watermark,
